@@ -80,7 +80,7 @@ class UserController {
         }
 
         $user = $result->fetch_assoc();
-        if ($password == $user['password']) {
+        if (password_verify($password, $user['password'])) {
             unset($user['password']); // Don't send password back
             echo json_encode(["success" => true, "message" => "Login successful", "user" => $user]);
         } else {

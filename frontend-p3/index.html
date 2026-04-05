@@ -232,7 +232,7 @@
                     </div>
                     <h3 class="fw-bold mb-3">Booking Confirmed!</h3>
                     <p class="text-muted mb-4">Your luxury escape has been reserved successfully. You can view the details in your itinerary.</p>
-                    <button type="button" class="btn btn-primary w-100 py-3 shadow-sm" data-bs-dismiss="modal">Great, thanks!</button>
+                    <button type="button" id="success-modal-btn" class="btn btn-primary w-100 py-3 shadow-sm" data-bs-dismiss="modal">Great, thanks!</button>
                 </div>
             </div>
         </div>
@@ -251,6 +251,42 @@
                         <!-- Google Maps Embed will go here -->
                     </div>
                     <p class="text-center text-muted small"><i class="fas fa-info-circle me-1"></i> This is a simulated map view for the project demo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px;">
+                <div class="modal-body p-5">
+                    <div class="mb-4">
+                        <div class="bg-soft-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-credit-card text-success fs-2"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-2">Secure Payment</h3>
+                    <p class="text-muted mb-4">You are paying for your reservation at <span id="pay-hotel-name" class="fw-bold"></span>.</p>
+                    
+                    <div class="bg-light p-3 rounded-3 mb-4 d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Total Amount</span>
+                        <span class="fs-4 fw-bold text-primary" id="pay-amount-display"></span>
+                    </div>
+
+                    <form id="payment-demo-form">
+                        <input type="hidden" id="pay-booking-id">
+                        <input type="hidden" id="pay-amount-value">
+                        <div class="mb-4 text-start">
+                            <label class="form-label text-muted small fw-bold">SELECT METHOD (DEMO)</label>
+                            <select class="form-select border-0 bg-light" id="pay-method">
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Online Banking">Online Banking</option>
+                                <option value="E-Wallet">E-Wallet</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-3 shadow-sm">Complete Payment</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -450,7 +486,10 @@
                     <span class="badge-soft small ${b.status === 'confirmed' ? 'bg-soft-success' : (b.status === 'cancelled' ? 'bg-soft-danger' : 'bg-soft-warning')}">${b.status.toUpperCase()}</span>
                 </div>
                 <p class="small text-muted mb-3"><i class="far fa-calendar-alt me-1"></i> ${formatDate(b.check_in)} - ${formatDate(b.check_out)}</p>
-                ${b.status !== 'cancelled' ? `<button class="btn btn-link btn-sm text-danger p-0 text-decoration-none fw-bold" style="font-size:0.7rem" onclick="cancelBooking(${b.id})">CANCEL BOOKING</button>` : ''}
+                <div class="d-flex gap-2">
+                    ${b.status === 'pending' ? `<button class="btn btn-primary btn-sm flex-grow-1" style="font-size:0.7rem" onclick="openPaymentModal(${b.id}, '${b.hotel_name}', 350)">PAY NOW</button>` : ''}
+                    ${b.status !== 'cancelled' ? `<button class="btn btn-link btn-sm text-danger p-0 text-decoration-none fw-bold" style="font-size:0.7rem" onclick="cancelBooking(${b.id})">CANCEL</button>` : ''}
+                </div>
             </div>
         `).join('') : '<p class="text-muted text-center small p-4 bg-white rounded-4">No reservations yet.</p>';
     }
@@ -510,11 +549,14 @@
                             <span class="ms-2 fw-medium">${b.user_name}</span>
                         </div>
                         <select class="form-select form-select-sm w-auto border-0 bg-light rounded-pill px-3" style="font-size:0.75rem" onchange="updateStatus(${b.id}, this.value)">
-                            <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
-                            <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
-                            <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
-                        </select>
-                    </div>
+                        <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
+                        <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
+                        <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
+                    </select>
+                    <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteBooking(${b.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
                     <div class="text-muted" style="font-size:0.8rem">
                          <i class="fas fa-hotel me-1"></i> ${b.hotel_name} 
                          <span class="mx-2 text-muted">|</span>
@@ -618,12 +660,70 @@
         }
     }
 
+    async function deleteBooking(id) {
+        if (!confirm('Are you sure you want to permanently delete this reservation?')) return;
+        const res = await apiCall(`/bookings/${id}`, 'DELETE');
+        if (res.success) {
+            alert('Reservation deleted successfully.');
+            loadAdminData();
+        } else alert(res.message);
+    }
+
+    function openPaymentModal(bookingId, hotelName, amount) {
+        document.getElementById('pay-booking-id').value = bookingId;
+        document.getElementById('pay-hotel-name').innerText = hotelName;
+        document.getElementById('pay-amount-display').innerText = `${CURRENCY}${amount}`;
+        document.getElementById('pay-amount-value').value = amount;
+        
+        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        modal.show();
+    }
+
+    document.getElementById('payment-demo-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const bookingId = document.getElementById('pay-booking-id').value;
+        const amount = document.getElementById('pay-amount-value').value;
+        const method = document.getElementById('pay-method').value;
+
+        // 1. Create the payment record
+        const createRes = await apiCall('/payments', 'POST', {
+            booking_id: parseInt(bookingId),
+            amount: parseFloat(amount),
+            method: method
+        });
+
+        if (createRes.success) {
+            // 2. Immediately mark as paid for the demo
+            const updateRes = await apiCall(`/payments/${createRes.id}`, 'PUT', {
+                status: 'paid'
+            });
+
+            if (updateRes.success) {
+                bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                
+                // Show Success Modal for Payment
+                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                document.querySelector('#successModal h3').innerText = "Payment Successful!";
+                document.querySelector('#successModal p').innerText = "Your payment has been processed and your booking is now CONFIRMED.";
+                
+                const btn = document.getElementById('success-modal-btn');
+                btn.innerText = "Great, thanks!";
+                btn.onclick = null; // Default behavior (data-bs-dismiss="modal")
+                
+                successModal.show();
+                
+                loadUserData();
+            } else alert('Payment update failed');
+        } else alert('Payment creation failed');
+    };
+
     showSection('hero');
 
     // Handle Modal Booking Submission
     document.getElementById('booking-modal-form').onsubmit = async (e) => {
         e.preventDefault();
         const hotelId = document.getElementById('modal-hotel-id').value;
+        const hotelName = document.getElementById('bookingHotelName').innerText.replace('Planning your stay at ', '');
         const checkIn = document.getElementById('modal-check-in').value;
         const checkOut = document.getElementById('modal-check-out').value;
         
@@ -638,10 +738,18 @@
             const modal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
             modal.hide();
             
-            // Show Beautified Success Modal instead of alert
+            // Show Success Modal with "Proceed to Payment"
             const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-            successModal.show();
+            document.querySelector('#successModal h3').innerText = "Booking Successful!";
+            document.querySelector('#successModal p').innerText = "Your reservation is saved. Please proceed to payment to confirm your luxury stay.";
             
+            const btn = document.getElementById('success-modal-btn');
+            btn.innerText = "Proceed to Payment";
+            btn.onclick = () => {
+                openPaymentModal(res.booking_id, hotelName, 350); // Default demo price 350
+            };
+            
+            successModal.show();
             loadUserData();
         } else alert(res.message);
     };
