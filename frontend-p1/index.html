@@ -22,7 +22,7 @@
     .logo { font-family: var(--font-h); font-size: 2.4rem; color: var(--gold-lt); margin-bottom: 8px; text-align: center; }
     .tagline { color: var(--muted); font-size: .95rem; text-align: center; margin-bottom: 52px; }
 
-    .grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; width: 100%; max-width: 860px; }
+    .grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; width: 100%; max-width: 600px; }
 
     .portal-card {
       background: var(--card); border: 1px solid var(--border);
@@ -72,15 +72,17 @@
 </head>
 <body>
 
-<div class="logo">🏨 HotelAPI</div>
-<div class="tagline">Hotel & Travel Reservation System — SWC3633 / SWC4443</div>
+<div class="logo">🏨 Hotel-API</div>
+<div class="tagline" style="line-height: 1.6;">Hotel & Travel Reservation System
+  <br>Mohamad Syaher Izham (AM2412017976)<br>
+</div>
+
 
 <div class="grid">
 
   <!-- Admin -->
   <a href="admin.html" class="portal-card admin">
     <div class="portal-icon">⚙️</div>
-    <div class="portal-label admin">Person 1</div>
     <div class="portal-title">Admin System</div>
     <div class="divider admin"></div>
     <div class="portal-desc">Full system management for hotel administrators</div>
@@ -95,28 +97,9 @@
     <span class="portal-btn admin">Open Admin →</span>
   </a>
 
-  <!-- Staff -->
-  <a href="staff.html" class="portal-card staff">
-    <div class="portal-icon">🧑‍💼</div>
-    <div class="portal-label staff">Person 2</div>
-    <div class="portal-title">Staff System</div>
-    <div class="divider staff"></div>
-    <div class="portal-desc">Receptionist portal for daily hotel operations</div>
-    <ul class="features">
-      <li>Staff login</li>
-      <li>Process bookings</li>
-      <li>Confirm / cancel</li>
-      <li>Record payments</li>
-      <li>View guest list</li>
-    </ul>
-    <br/>
-    <span class="portal-btn staff">Open Staff →</span>
-  </a>
-
   <!-- Customer -->
   <a href="customer.html" class="portal-card customer">
     <div class="portal-icon">🧳</div>
-    <div class="portal-label customer">Person 3</div>
     <div class="portal-title">Customer System</div>
     <div class="divider customer"></div>
     <div class="portal-desc">Guest portal for browsing and booking hotels</div>
