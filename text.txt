@@ -1,0 +1,6 @@
+save folder dalam htdocs
+
+path untuk run
+http://localhost/hotel-api/frontend-p3/index.html
+
+default password : password123

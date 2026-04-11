@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HotelBooking - Luxury Stay Portal | Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #1a2a3a; 
+            --accent: #3498db; 
+            --bg: #f8fafc;
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            --transition: all 0.3s ease;
+        }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg); 
+            color: #334155;
+            line-height: 1.6;
+        }
+        .navbar { 
+            background: var(--primary); 
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar-brand { 
+            font-weight: 600; 
+            letter-spacing: -0.5px;
+            color: white !important; 
+        }
+        .card { 
+            border: none; 
+            border-radius: 16px; 
+            box-shadow: var(--card-shadow); 
+            transition: var(--transition);
+            background: white;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .btn { border-radius: 10px; padding: 0.6rem 1.5rem; font-weight: 500; transition: var(--transition); }
+        .btn-primary { background: var(--accent); border: none; }
+        .btn-primary:hover { background: #2980b9; transform: scale(1.02); }
+        
+        #login-section, #register-section { 
+            display: none; 
+            animation: fadeIn 0.5s ease; 
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .hero { 
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200'); 
+            background-size: cover; 
+            background-position: center;
+            color: white; 
+            padding: 120px 0; 
+            text-align: center; 
+            border-radius: 0 0 40px 40px;
+            margin-bottom: 50px;
+        }
+        .hero h1 { font-weight: 700; margin-bottom: 20px; }
+        .hero p { opacity: 0.9; font-weight: 300; }
+        .form-control { border-radius: 10px; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; }
+        .form-control:focus { box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1); border-color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="login.html"><i class="fas fa-hotel me-2"></i>HotelBooking</a>
+        <div class="ms-auto d-flex align-items-center">
+            <button id="login-nav-btn" class="btn btn-outline-light btn-sm px-4" onclick="showSection('login')">Login</button>
+        </div>
+    </div>
+</nav>
+
+<div id="hero-section" class="hero">
+    <div class="container">
+        <h1 class="display-4">Welcome to HotelBooking</h1>
+        <p class="lead mb-4">Discover unparalleled luxury and comfort for your next escape.</p>
+        <button class="btn btn-primary btn-lg px-5 shadow" onclick="showSection('login')">Start Exploring</button>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <!-- Login Section -->
+    <div id="login-section" class="mx-auto" style="max-width: 450px;">
+        <div class="card p-5">
+            <h3 class="text-center mb-4 fw-bold">Sign In</h3>
+            <form id="login-form">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">EMAIL ADDRESS</label>
+                    <input type="email" id="login-email" class="form-control" placeholder="name@example.com" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-bold">PASSWORD</label>
+                    <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3 shadow-sm">Sign In</button>
+            </form>
+            <p class="text-center mt-3 text-muted small">Don't have an account? <a href="#" class="text-decoration-none fw-bold" onclick="showSection('register')">Create one now</a></p>
+        </div>
+    </div>
+
+    <!-- Register Section -->
+    <div id="register-section" class="mx-auto" style="max-width: 450px;">
+        <div class="card p-5">
+            <h3 class="text-center mb-4 fw-bold">Create Account</h3>
+            <form id="register-form">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">FULL NAME</label>
+                    <input type="text" id="reg-name" class="form-control" placeholder="John Doe" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">EMAIL ADDRESS</label>
+                    <input type="email" id="reg-email" class="form-control" placeholder="name@example.com" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-bold">PASSWORD</label>
+                    <input type="password" id="reg-pass" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3 shadow-sm">Register</button>
+            </form>
+            <p class="text-center mt-3 text-muted small">Already have an account? <a href="#" class="text-decoration-none fw-bold" onclick="showSection('login')">Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/hotel-api/api';
+    const API_KEY = 'hotel-secret-key-2026';
+
+    // Check if user is already logged in
+    const storedUser = localStorage.getItem('hotelUser');
+    if (storedUser) {
+        const user = JSON.parse(storedUser);
+        if (user.role === 'admin') {
+            window.location.href = 'admin.html';
+        } else {
+            window.location.href = 'customer.html';
+        }
+    }
+
+    function showSection(section) {
+        ['hero-section', 'login-section', 'register-section'].forEach(s => {
+            const el = document.getElementById(s);
+            if (el) el.style.display = 'none';
+        });
+        const target = document.getElementById(section + '-section');
+        if (target) target.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        const options = {
+            method,
+            headers: { 'X-API-KEY': API_KEY, 'Content-Type': 'application/json' }
+        };
+        if (body) options.body = JSON.stringify(body);
+        const res = await fetch(`${API_BASE}${endpoint}`, options);
+        return await res.json();
+    }
+
+    document.getElementById('login-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const res = await apiCall('/users/login', 'POST', {
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-pass').value
+        });
+        if (res.success) {
+            localStorage.setItem('hotelUser', JSON.stringify(res.user));
+            if (res.user.role === 'admin') {
+                window.location.href = 'admin.html';
+            } else {
+                window.location.href = 'customer.html';
+            }
+        } else alert(res.message);
+    };
+
+    document.getElementById('register-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const res = await apiCall('/users', 'POST', {
+            name: document.getElementById('reg-name').value,
+            email: document.getElementById('reg-email').value,
+            password: document.getElementById('reg-pass').value
+        });
+        if (res.success) {
+            alert('Account created! Please sign in.');
+            showSection('login');
+        } else alert(res.message);
+    };
+
+    // Initially show hero
+    showSection('hero');
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
