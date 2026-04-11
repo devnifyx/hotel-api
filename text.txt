@@ -1,6 +1,14 @@
 save folder dalam htdocs
 
 path untuk run
+Muhammad Hanif Bin Mohamad Nizam (AM2412017978)
 http://localhost/hotel-api/frontend-p3/index.html
 
+
+Admin
+email: admin@email.com
 default password : password123
+
+Customer
+email: customer@email.com
+password: password123
