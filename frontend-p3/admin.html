@@ -76,6 +76,8 @@
     </div>
 </nav>
 
+<script src="config.js"></script>
+
 <div class="container mt-5">
     <div id="admin-section">
         <div class="row">
@@ -150,9 +152,10 @@
 
 <script>
     const API_BASE = '/hotel-api/api';
-    const API_KEY = 'hotel-secret-key-2026';
+    const API_KEY = CONFIG.INTERNAL_API_KEY;
     const CURRENCY = 'RM';
     let currentUser = null;
+
 
     // Session check
     const storedUser = localStorage.getItem('hotelUser');

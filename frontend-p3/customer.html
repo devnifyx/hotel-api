@@ -93,6 +93,8 @@
     </div>
 </nav>
 
+<script src="config.js"></script>
+
 <div class="container mt-5">
     <div id="user-section">
         <div class="row g-4">
@@ -210,10 +212,11 @@
 
 <script>
     const API_BASE = '/hotel-api/api';
-    const API_KEY = 'hotel-secret-key-2026';
-    const WEATHER_API_KEY = 'a0f5c401c8d4cf28091f7778f36a37ea';
+    const API_KEY = CONFIG.INTERNAL_API_KEY;
+    const WEATHER_API_KEY = CONFIG.WEATHER_API_KEY;
     const CURRENCY = 'RM';
     let currentUser = null;
+
 
     // Session check
     const storedUser = localStorage.getItem('hotelUser');

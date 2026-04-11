@@ -82,6 +82,8 @@
     </div>
 </nav>
 
+<script src="config.js"></script>
+
 <div id="hero-section" class="hero">
     <div class="container">
         <h1 class="display-4">Welcome to HotelBooking</h1>
@@ -136,7 +138,7 @@
 
 <script>
     const API_BASE = '/hotel-api/api';
-    const API_KEY = 'hotel-secret-key-2026';
+    const API_KEY = CONFIG.INTERNAL_API_KEY;
 
     // Check if user is already logged in
     const storedUser = localStorage.getItem('hotelUser');

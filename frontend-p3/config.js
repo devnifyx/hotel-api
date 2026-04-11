@@ -1,0 +1,4 @@
+const CONFIG = {
+    WEATHER_API_KEY: "PASTE_YOUR_OPENWEATHERMAP_API_KEY_HERE",
+    INTERNAL_API_KEY: "hotel-secret-key-2026"
+};
