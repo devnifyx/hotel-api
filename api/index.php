@@ -22,6 +22,52 @@ require_once 'controllers/UserController.php';
 require_once 'controllers/PaymentController.php';
 require_once 'controllers/AnalyticsController.php';
 
+// ── Rate Limiting ─────────────────────────────────────────
+function checkRateLimit($conn) {
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $limit = 100; // max requests
+    $window = 60; // seconds (1 minute)
+
+    $stmt = $conn->prepare("SELECT id, requests, window_start FROM rate_limits WHERE ip_address = ?");
+    $stmt->bind_param("s", $ip);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        $now = time();
+        $start = strtotime($row['window_start']);
+        
+        if ($now - $start < $window) {
+            if ($row['requests'] >= $limit) {
+                http_response_code(429);
+                echo json_encode([
+                    "success" => false, 
+                    "message" => "Too many requests. Please try again in " . ($window - ($now - $start)) . " seconds."
+                ]);
+                exit();
+            }
+            // Increment request count
+            $stmt = $conn->prepare("UPDATE rate_limits SET requests = requests + 1 WHERE id = ?");
+            $stmt->bind_param("i", $row['id']);
+            $stmt->execute();
+        } else {
+            // Window expired, reset count and start time
+            $stmt = $conn->prepare("UPDATE rate_limits SET requests = 1, window_start = CURRENT_TIMESTAMP WHERE id = ?");
+            $stmt->bind_param("i", $row['id']);
+            $stmt->execute();
+        }
+    } else {
+        // First request from this IP
+        $stmt = $conn->prepare("INSERT INTO rate_limits (ip_address, requests) VALUES (?, 1)");
+        $stmt->bind_param("s", $ip);
+        $stmt->execute();
+    }
+}
+
+// Initialize database and check rate limit
+$dbConn = getConnection();
+checkRateLimit($dbConn);
+
 // ── Check API Key ─────────────────────────────────────────
 $apiKeyHeader = $_SERVER['HTTP_X_API_KEY'] ?? '';
 $validApiKey  = 'hotel-secret-key-2026';

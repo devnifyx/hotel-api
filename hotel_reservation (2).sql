@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 05, 2026 at 09:26 AM
+-- Generation Time: Apr 11, 2026 at 10:09 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,7 +43,9 @@ CREATE TABLE `bookings` (
 
 INSERT INTO `bookings` (`id`, `user_id`, `hotel_id`, `check_in`, `check_out`, `status`, `created_at`) VALUES
 (19, 8, 3, '2026-04-05', '2026-04-08', 'pending', '2026-04-05 07:07:13'),
-(27, 7, 1, '2026-04-05', '2026-04-08', 'confirmed', '2026-04-05 07:13:19');
+(27, 7, 1, '2026-04-05', '2026-04-08', 'confirmed', '2026-04-05 07:13:19'),
+(29, 13, 1, '2026-04-10', '2026-04-13', 'cancelled', '2026-04-10 13:29:08'),
+(30, 14, 3, '2026-04-10', '2026-04-13', 'confirmed', '2026-04-10 16:20:39');
 
 -- --------------------------------------------------------
 
@@ -94,7 +96,22 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`id`, `booking_id`, `amount`, `method`, `status`, `paid_at`) VALUES
-(8, 27, 350.00, 'Credit Card', 'paid', '2026-04-05 01:13:23');
+(8, 27, 350.00, 'Credit Card', 'paid', '2026-04-05 01:13:23'),
+(10, 29, 350.00, 'Credit Card', 'paid', '2026-04-10 07:29:28'),
+(11, 30, 350.00, 'Credit Card', 'paid', '2026-04-10 10:20:41');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `rate_limits`
+--
+
+CREATE TABLE `rate_limits` (
+  `id` int(11) NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `requests` int(11) DEFAULT 1,
+  `window_start` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -116,11 +133,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `created_at`) VALUES
-(4, 'Administartor', 'admin@email.com', '$2y$10$xl4kinXOanE3RjYhoOLtC.6BRNRdbDdHEzfDiJ7vjpCpbx0ClOgIu', 'admin', '2026-03-30 04:54:42'),
+(4, 'Administrator', 'admin@email.com', '$2y$10$xl4kinXOanE3RjYhoOLtC.6BRNRdbDdHEzfDiJ7vjpCpbx0ClOgIu', 'admin', '2026-03-30 04:54:42'),
 (7, 'Demo Customer', 'customer@email.com', '$2y$10$htTWLRZWUtZe2VplLx/htuv4Cr.X7kJH8bIkrwzmvuz6UQQu3Hk4e', 'customer', '2026-04-04 04:14:58'),
 (8, 'syaher', 'syaher@email.com', '$2y$10$bEYNTj6LITym0jN6cOJhle/PLkvMpmMhBmiyNr4bPgHgYsjFf8rfC', 'customer', '2026-04-05 07:00:38'),
 (10, 'Hilmi', 'hilmi@email.com', '$2y$10$c0B5WnfgmghKks645V0SzOtUbjxGcZH.O.jmBPdcppBVKSlIYruSa', 'customer', '2026-04-05 07:13:54'),
-(13, 'hanif', 'hanif@email.com', '$2y$10$IPQT2qPetV2cRRKagQpvdOKMsht1rMENP01MJushewW4K9wsKlW1K', 'customer', '2026-04-05 07:14:58');
+(13, 'hanif', 'hanif@email.com', '$2y$10$IPQT2qPetV2cRRKagQpvdOKMsht1rMENP01MJushewW4K9wsKlW1K', 'customer', '2026-04-05 07:14:58'),
+(14, 'pak', 'pak@gmail.com', '$2y$10$IpvVsBAVRNNxg9QRfZqBuu4JFU2rrgwgR6hRb75R07y1lm2OHRYqi', 'customer', '2026-04-10 16:20:22');
 
 --
 -- Indexes for dumped tables
@@ -148,6 +166,12 @@ ALTER TABLE `payments`
   ADD KEY `booking_id` (`booking_id`);
 
 --
+-- Indexes for table `rate_limits`
+--
+ALTER TABLE `rate_limits`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -162,7 +186,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `hotels`
@@ -174,13 +198,19 @@ ALTER TABLE `hotels`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `rate_limits`
+--
+ALTER TABLE `rate_limits`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- Constraints for dumped tables
