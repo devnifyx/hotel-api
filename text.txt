@@ -1,9 +1,14 @@
 save folder dalam htdocs
 
 path untuk run
-Muhammad Hanif Bin Mohamad Nizam (AM2412017978)
+MUHAMMAD HANIF BIN MOHAMAD NIZAM (AM2412017978)
 http://localhost/hotel-api/frontend-p3/index.html
 
+MOHAMAD SYAHER IZHAM BIN ISSHAMWIL (AM2412017976)
+http://localhost/hotel-api/frontend-p1/index.html
+
+MUHAMMAD HILMI BIN JAIS (AM2412018240)
+http://localhost/hotel-api/frontend-p2/index.html
 
 Admin
 email: admin@email.com
