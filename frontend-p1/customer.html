@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HotelAPI — Customer Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#fafafa;--surface:#ffffff;--card:#ffffff;--nav:#0f172a;
+      --accent:#0ea5e9;--accent2:#0284c7;--text:#0f172a;--muted:#64748b;
+      --border:#e2e8f0;--green:#059669;--red:#dc2626;--amber:#d97706;
+      --radius:14px;--font:'Plus Jakarta Sans',sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+    .navbar{background:var(--nav);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .nav-logo{font-size:1.3rem;font-weight:800;color:#fff;}
+    .nav-logo span{color:var(--accent);}
+    .nav-right{display:flex;align-items:center;gap:12px;}
+    .nav-user{color:rgba(255,255,255,.7);font-size:.85rem;}
+    .nav-user strong{color:#fff;}
+    .nav-btn{padding:7px 16px;border-radius:8px;font-family:var(--font);font-size:.83rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+    .nav-btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,.2);color:#fff;}
+    .nav-btn-outline:hover{border-color:rgba(255,255,255,.5);}
+    .nav-btn-primary{background:var(--accent);color:#fff;}
+    .nav-btn-primary:hover{background:var(--accent2);}
+    /* Auth */
+    .auth-wrap{min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f9ff,#e0f2fe,#f0f9ff);padding:40px 20px;}
+    .auth-box{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 4px 40px rgba(14,165,233,.12);border:1px solid rgba(14,165,233,.1);}
+    .auth-title{font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:4px;}
+    .auth-sub{color:var(--muted);font-size:.88rem;margin-bottom:28px;}
+    .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+    .form-label{font-size:.78rem;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;}
+    .form-input{padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:.9rem;color:var(--text);outline:none;transition:all .2s;background:#f8fafc;}
+    .form-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+    .btn-auth{width:100%;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s;margin-top:4px;}
+    .btn-auth:hover{background:var(--accent2);}
+    .auth-switch{text-align:center;margin-top:18px;font-size:.85rem;color:var(--muted);}
+    .auth-switch a{color:var(--accent);cursor:pointer;font-weight:600;text-decoration:none;}
+    .alert{padding:10px 14px;border-radius:8px;font-size:.85rem;margin-bottom:14px;display:none;}
+    .alert-red{background:#fef2f2;border:1px solid #fecaca;color:var(--red);}
+    .alert-green{background:#f0fdf4;border:1px solid #bbf7d0;color:var(--green);}
+    /* App */
+    .app-wrap{max-width:1100px;margin:0 auto;padding:36px 24px;}
+    .page-title{font-size:1.8rem;font-weight:800;color:var(--text);margin-bottom:4px;}
+    .page-sub{color:var(--muted);font-size:.9rem;margin-bottom:28px;}
+    .tab-nav{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px;margin-bottom:28px;width:fit-content;}
+    .tab-btn{padding:9px 20px;border-radius:9px;border:none;cursor:pointer;font-family:var(--font);font-size:.88rem;font-weight:600;color:var(--muted);background:transparent;transition:all .2s;}
+    .tab-btn.active{background:#fff;color:var(--accent);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+    /* Hotel Grid */
+    .hotel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+    .hotel-card{background:var(--card);border-radius:var(--radius);border:1.5px solid var(--border);overflow:hidden;transition:all .25s;cursor:pointer;}
+    .hotel-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 32px rgba(14,165,233,.12);}
+    .hotel-thumb{height:160px;display:flex;align-items:center;justify-content:center;font-size:3.5rem;}
+    .hotel-body{padding:16px;}
+    .hotel-name{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+    .hotel-loc{font-size:.8rem;color:var(--muted);margin-bottom:12px;}
+    .hotel-foot{display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--border);}
+    .hotel-price-val{font-size:1.2rem;font-weight:800;color:var(--accent);}
+    .hotel-price-sub{font-size:.72rem;color:var(--muted);font-weight:500;}
+    .btn-book{padding:8px 18px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:.82rem;font-weight:700;cursor:pointer;transition:background .2s;}
+    .btn-book:hover{background:var(--accent2);}
+    .search-row{display:flex;gap:10px;margin-bottom:24px;}
+    .search-input{flex:1;max-width:360px;padding:10px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:.9rem;outline:none;transition:border .2s;background:#fff;}
+    .search-input:focus{border-color:var(--accent);}
+    /* Booking cards */
+    .booking-cards{display:flex;flex-direction:column;gap:14px;}
+    .booking-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;transition:border .2s;}
+    .booking-item:hover{border-color:var(--accent);}
+    .booking-info .b-hotel{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+    .booking-info .b-dates{font-size:.82rem;color:var(--muted);}
+    .booking-info .b-ref{font-size:.78rem;color:var(--muted);margin-top:4px;}
+    .booking-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    /* Badges */
+    .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.73rem;font-weight:700;}
+    .badge-green{background:#dcfce7;color:#15803d;}
+    .badge-amber{background:#fef9c3;color:#a16207;}
+    .badge-red{background:#fee2e2;color:#b91c1c;}
+    .badge-blue{background:#dbeafe;color:#1d4ed8;}
+    .badge-paid{background:#dcfce7;color:#15803d;}
+    .badge-unpaid{background:#fef9c3;color:#a16207;}
+    /* Buttons */
+    .btn{padding:8px 18px;border-radius:8px;border:none;font-family:var(--font);font-size:.83rem;font-weight:600;cursor:pointer;transition:all .15s;}
+    .btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent2);}
+    .btn-success{background:#059669;color:#fff;}.btn-success:hover{background:#047857;}
+    .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);}.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+    /* Modal */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:300;align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:#fff;border-radius:20px;padding:32px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.15);max-height:90vh;overflow-y:auto;}
+    .modal-header{margin-bottom:20px;}
+    .modal-hotel-name{font-size:1.3rem;font-weight:800;color:var(--text);}
+    .modal-hotel-loc{color:var(--muted);font-size:.85rem;margin-top:2px;}
+    .modal-price-pill{display:inline-flex;align-items:center;gap:6px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:8px 14px;margin:12px 0 20px;}
+    .modal-price-pill .price{font-size:1.2rem;font-weight:800;color:var(--accent);}
+    .modal-price-pill .per{font-size:.8rem;color:var(--muted);}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .total-row{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 14px;margin:8px 0 16px;display:flex;align-items:center;justify-content:space-between;}
+    .total-row .label{font-size:.8rem;color:var(--muted);font-weight:600;}
+    .total-row .value{font-size:1.2rem;font-weight:800;color:var(--accent);}
+    .btn-confirm{width:100%;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:var(--font);font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s;}
+    .btn-confirm:hover{background:var(--accent2);}
+    .btn-confirm:disabled{opacity:.5;cursor:not-allowed;}
+    .btn-cancel-modal{width:100%;padding:11px;border-radius:10px;background:transparent;border:1.5px solid var(--border);color:var(--muted);font-family:var(--font);font-size:.9rem;font-weight:600;cursor:pointer;margin-top:8px;transition:all .2s;}
+    .btn-cancel-modal:hover{border-color:var(--accent);color:var(--accent);}
+    /* Payment Method */
+    .pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+    .pay-method-btn{padding:12px;border:2px solid var(--border);border-radius:10px;background:#fff;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:4px;}
+    .pay-method-btn:hover{border-color:var(--accent);}
+    .pay-method-btn.selected{border-color:var(--accent);background:#f0f9ff;color:var(--accent);}
+    .pay-method-btn .pm-icon{font-size:1.4rem;}
+    .pay-amount-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center;}
+    .pay-amount-label{font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+    .pay-amount-value{font-size:1.8rem;font-weight:800;color:var(--accent);margin-top:4px;}
+    /* Success */
+    .success-view{text-align:center;padding:12px 0;}
+    .success-icon{font-size:4rem;margin-bottom:12px;}
+    .success-title{font-size:1.4rem;font-weight:800;color:var(--green);margin-bottom:8px;}
+    .success-msg{color:var(--muted);font-size:.9rem;line-height:1.6;}
+    .ref-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin:16px 0;}
+    .ref-label{font-size:.72rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.6px;}
+    .ref-value{font-size:1.8rem;font-weight:800;color:var(--green);margin-top:4px;}
+    /* Payments tab */
+    .payment-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px;transition:border .2s;}
+    .payment-item:hover{border-color:var(--accent);}
+    #toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--nav);color:#fff;border-radius:12px;padding:12px 20px;font-size:.88rem;font-weight:500;transform:translateY(60px);opacity:0;transition:all .3s;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+    #toast.show{transform:translateY(0);opacity:1;}
+    .empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+    .empty-state .icon{font-size:2.5rem;margin-bottom:12px;}
+    @media(max-width:600px){.navbar{padding:0 16px;}.app-wrap{padding:20px 12px;}.hotel-grid{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}.pay-methods{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-logo">Hotel<span>API</span></div>
+  <div class="nav-right" id="nav-right">
+    <button class="nav-btn nav-btn-outline" onclick="showAuth('login')">Login</button>
+    <button class="nav-btn nav-btn-primary" onclick="showAuth('register')">Register</button>
+  </div>
+</nav>
+
+<!-- AUTH -->
+<div id="auth-section">
+  <div class="auth-wrap" id="page-register">
+    <div class="auth-box">
+      <div class="auth-title">Create Account</div>
+      <div class="auth-sub">Join HotelAPI and start booking your perfect stay</div>
+      <div class="alert alert-green" id="reg-ok"></div>
+      <div class="alert alert-red" id="reg-err"></div>
+      <div class="form-group"><div class="form-label">Full Name</div><input class="form-input" id="r-name" placeholder="e.g. Ahmad Syaher"/></div>
+      <div class="form-group"><div class="form-label">Email Address</div><input class="form-input" id="r-email" type="email" placeholder="e.g. syaher@email.com"/></div>
+      <div class="form-group"><div class="form-label">Password</div><input class="form-input" id="r-pass" type="password" placeholder="Minimum 6 characters"/></div>
+      <button class="btn-auth" onclick="doRegister()">Create My Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="showAuth('login')">Sign in here</a></div>
+    </div>
+  </div>
+  <div class="auth-wrap" id="page-login" style="display:none">
+    <div class="auth-box">
+      <div class="auth-title">Welcome Back</div>
+      <div class="auth-sub">Sign in to manage your hotel bookings</div>
+      <div class="alert alert-red" id="login-err"></div>
+      <div class="form-group"><div class="form-label">Email Address</div><input class="form-input" id="l-email" placeholder="your@email.com"/></div>
+      <div class="form-group"><div class="form-label">Password</div><input class="form-input" id="l-pass" type="password" placeholder="Your password"/></div>
+      <button class="btn-auth" onclick="doLogin()">Sign In</button>
+      <div class="auth-switch">No account yet? <a onclick="showAuth('register')">Register for free</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-section" style="display:none">
+  <div class="app-wrap">
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="showTab('browse')" id="tab-browse">🏨 Browse Hotels</button>
+      <button class="tab-btn" onclick="showTab('mybookings')" id="tab-mybookings">📋 My Bookings</button>
+      <button class="tab-btn" onclick="showTab('mypayments')" id="tab-mypayments">💳 My Payments</button>
+    </div>
+
+    <!-- Browse Hotels -->
+    <div id="tab-content-browse">
+      <div class="page-title">Browse Hotels</div>
+      <div class="page-sub">Find and book your perfect stay across Malaysia</div>
+      <div class="search-row"><input class="search-input" id="search-q" placeholder="🔍 Search hotel or city..." oninput="filterHotels(this.value)"/></div>
+      <div id="hotel-grid" class="hotel-grid"></div>
+    </div>
+
+    <!-- My Bookings -->
+    <div id="tab-content-mybookings" style="display:none">
+      <div class="page-title">My Bookings</div>
+      <div class="page-sub">All your hotel reservations — click Pay Now to complete your booking</div>
+      <div id="bookings-list" class="booking-cards"></div>
+    </div>
+
+    <!-- My Payments -->
+    <div id="tab-content-mypayments" style="display:none">
+      <div class="page-title">My Payments</div>
+      <div class="page-sub">Payment history for all your bookings</div>
+      <div id="payments-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal-overlay" id="book-modal">
+  <div class="modal">
+    <div id="book-form">
+      <div class="modal-header">
+        <div class="modal-hotel-name" id="bm-hotel-name">Hotel</div>
+        <div class="modal-hotel-loc" id="bm-hotel-loc">Location</div>
+        <div class="modal-price-pill"><span class="price" id="bm-price">RM 0</span><span class="per">per night</span></div>
+      </div>
+      <div class="alert alert-red" id="book-err"></div>
+      <div class="form-row">
+        <div class="form-group"><div class="form-label">Check In</div><input class="form-input" id="bm-checkin" type="date"/></div>
+        <div class="form-group"><div class="form-label">Check Out</div><input class="form-input" id="bm-checkout" type="date" onchange="calcTotal()"/></div>
+      </div>
+      <div class="total-row" id="total-row" style="display:none">
+        <span class="label">Total Estimated Cost</span><span class="value" id="bm-total">RM 0</span>
+      </div>
+      <button class="btn-confirm" id="btn-confirm" onclick="submitBooking()">Confirm Booking</button>
+      <button class="btn-cancel-modal" onclick="closeBookModal()">Cancel</button>
+    </div>
+    <div id="book-success" style="display:none">
+      <div class="success-view">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Booking Confirmed!</div>
+        <div class="ref-box"><div class="ref-label">Booking Reference</div><div class="ref-value" id="bm-ref">#---</div></div>
+        <div class="success-msg">Your booking has been placed. Complete your payment in My Bookings.</div>
+        <button class="btn-confirm" style="margin-top:20px" onclick="afterBooking()">View My Bookings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="pay-modal">
+  <div class="modal">
+    <div id="pay-form">
+      <div style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:4px">Complete Payment</div>
+      <div style="color:var(--muted);font-size:.85rem;margin-bottom:20px" id="pay-booking-info">Booking details</div>
+
+      <div class="pay-amount-box">
+        <div class="pay-amount-label">Total Amount</div>
+        <div class="pay-amount-value" id="pay-amount-display">RM 0.00</div>
+      </div>
+
+      <div style="font-size:.8rem;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Select Payment Method</div>
+      <div class="pay-methods">
+        <button class="pay-method-btn" onclick="selectPayMethod('Credit Card',this)">
+          <span class="pm-icon">💳</span><span>Credit Card</span>
+        </button>
+        <button class="pay-method-btn" onclick="selectPayMethod('FPX',this)">
+          <span class="pm-icon">🏦</span><span>FPX Online Banking</span>
+        </button>
+        <button class="pay-method-btn" onclick="selectPayMethod('TNG eWallet',this)">
+          <span class="pm-icon">📱</span><span>TNG eWallet</span>
+        </button>
+        <button class="pay-method-btn" onclick="selectPayMethod('GrabPay',this)">
+          <span class="pm-icon">🟢</span><span>GrabPay</span>
+        </button>
+        <button class="pay-method-btn" onclick="selectPayMethod('ShopeePay',this)">
+          <span class="pm-icon">🛒</span><span>ShopeePay</span>
+        </button>
+        <button class="pay-method-btn" onclick="selectPayMethod('Cash',this)">
+          <span class="pm-icon">💵</span><span>Cash on Arrival</span>
+        </button>
+      </div>
+      <div class="alert alert-red" id="pay-err"></div>
+      <button class="btn-confirm" id="pay-btn" onclick="submitPayment()">Pay Now</button>
+      <button class="btn-cancel-modal" onclick="closePayModal()">Cancel</button>
+    </div>
+    <div id="pay-success" style="display:none">
+      <div class="success-view">
+        <div class="success-icon">✅</div>
+        <div class="success-title">Payment Successful!</div>
+        <div class="ref-box">
+          <div class="ref-label">Payment Reference</div>
+          <div class="ref-value" id="pay-ref-id">#---</div>
+        </div>
+        <div class="success-msg">Your booking has been <strong>confirmed</strong>.<br>A confirmation email has been sent to your inbox.</div>
+        <button class="btn-confirm" style="margin-top:20px;background:#059669" onclick="afterPayment()">View My Bookings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const BASE    = '/hotel-api/api';
+  const API_KEY = 'hotel-secret-key-2026';
+  let currentUser   = null;
+  let allHotels     = [];
+  let selectedHotel = null;
+  let selectedPayMethod = null;
+  let payingBooking = null;
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    const p = d.split('T')[0].split('-');
+    return `${p[2]}/${p[1]}/${p[0]}`;
+  }
+
+  async function api(method, endpoint, body = null) {
+    const opts = { method, headers:{'Content-Type':'application/json','X-API-KEY':API_KEY} };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(BASE + endpoint, opts);
+    return res.json();
+  }
+
+  function toast(msg, color = '#0ea5e9') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.style.background = color;
+    el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),3000);
+  }
+
+  function showAlert(id, msg, show=true) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.style.display = show?'block':'none';
+  }
+
+  // ── Auth ────────────────────────────────────────────────
+  function showAuth(page) {
+    document.getElementById('page-register').style.display = page==='register'?'flex':'none';
+    document.getElementById('page-login').style.display    = page==='login'?'flex':'none';
+  }
+
+  async function doRegister() {
+    const name=document.getElementById('r-name').value.trim();
+    const email=document.getElementById('r-email').value.trim();
+    const pass=document.getElementById('r-pass').value;
+    showAlert('reg-ok','',false); showAlert('reg-err','',false);
+    if(!name||!email||!pass){showAlert('reg-err','Please fill in all fields.');return;}
+    if(pass.length<6){showAlert('reg-err','Password must be at least 6 characters.');return;}
+    const res = await api('POST','/users',{name,email,password:pass});
+    if(res.success){showAlert('reg-ok','✅ Account created! Redirecting to login...');setTimeout(()=>showAuth('login'),1500);}
+    else showAlert('reg-err',res.message||'Registration failed. Email may already exist.');
+  }
+
+  async function doLogin() {
+    const email=document.getElementById('l-email').value.trim();
+    const pass=document.getElementById('l-pass').value;
+    showAlert('login-err','',false);
+    if(!email||!pass){showAlert('login-err','Please enter email and password.');return;}
+    const data=await api('GET','/users');
+    const user=(data.data||[]).find(u=>u.email===email);
+    if(!user){showAlert('login-err','Email not found. Please register first.');return;}
+    currentUser=user;
+    localStorage.setItem('cust_id',user.id);
+    localStorage.setItem('cust_name',user.name);
+    localStorage.setItem('cust_email',user.email);
+    launchApp();
+  }
+
+  function launchApp() {
+    document.getElementById('auth-section').style.display='none';
+    document.getElementById('app-section').style.display='block';
+    const name=localStorage.getItem('cust_name');
+    document.getElementById('nav-right').innerHTML=`
+      <span class="nav-user">Hello, <strong>${name}</strong></span>
+      <button class="nav-btn nav-btn-outline" onclick="doLogout()">Logout</button>`;
+    currentUser={id:localStorage.getItem('cust_id'),name:localStorage.getItem('cust_name'),email:localStorage.getItem('cust_email')};
+    loadHotels();
+  }
+
+  function doLogout() {
+    ['cust_id','cust_name','cust_email'].forEach(k=>localStorage.removeItem(k));
+    currentUser=null;
+    document.getElementById('app-section').style.display='none';
+    document.getElementById('auth-section').style.display='block';
+    document.getElementById('nav-right').innerHTML=`
+      <button class="nav-btn nav-btn-outline" onclick="showAuth('login')">Login</button>
+      <button class="nav-btn nav-btn-primary" onclick="showAuth('register')">Register</button>`;
+    showAuth('register');
+  }
+
+  // ── Tabs ────────────────────────────────────────────────
+  function showTab(tab) {
+    ['browse','mybookings','mypayments'].forEach(t=>{
+      document.getElementById('tab-content-'+t).style.display=t===tab?'block':'none';
+      document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    });
+    if(tab==='mybookings') loadMyBookings();
+    if(tab==='mypayments') loadMyPayments();
+  }
+
+  // ── Hotels ──────────────────────────────────────────────
+  const ICONS  = ['🏨','🏩','🏰','🌅','🌊','🌴','🏯','🌆'];
+  const COLORS = ['#e0f2fe','#f0fdf4','#fef9c3','#fdf2f8','#fff7ed','#f0f9ff','#ecfdf5','#fef2f2'];
+
+  async function loadHotels() {
+    const data=await api('GET','/hotels');
+    allHotels=data.data||[];
+    renderHotels(allHotels);
+  }
+
+  function renderHotels(list) {
+    const grid=document.getElementById('hotel-grid');
+    if(!list.length){grid.innerHTML='<div class="empty-state"><div class="icon">🔍</div><p>No hotels found.</p></div>';return;}
+    grid.innerHTML=list.map((h,i)=>`
+      <div class="hotel-card" onclick="openBookModal(${JSON.stringify(h).replace(/"/g,'&quot;')})">
+        <div class="hotel-thumb" style="background:${COLORS[i%COLORS.length]}">${ICONS[i%ICONS.length]}</div>
+        <div class="hotel-body">
+          <div class="hotel-name">${h.name}</div>
+          <div class="hotel-loc">📍 ${h.location}</div>
+          ${h.description?`<div style="font-size:.78rem;color:var(--muted);margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${h.description}</div>`:''}
+          <div class="hotel-foot">
+            <div><div class="hotel-price-val">RM ${parseFloat(h.price_per_night).toFixed(0)}</div><div class="hotel-price-sub">per night</div></div>
+            <button class="btn-book" onclick="event.stopPropagation();openBookModal(${JSON.stringify(h).replace(/"/g,'&quot;')})">Book Now →</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function filterHotels(q) {
+    if(!q.trim()){renderHotels(allHotels);return;}
+    renderHotels(allHotels.filter(h=>h.name.toLowerCase().includes(q.toLowerCase())||h.location.toLowerCase().includes(q.toLowerCase())));
+  }
+
+  // ── Booking Modal ────────────────────────────────────────
+  function openBookModal(hotel) {
+    selectedHotel=hotel;
+    document.getElementById('book-form').style.display='block';
+    document.getElementById('book-success').style.display='none';
+    document.getElementById('book-err').style.display='none';
+    document.getElementById('bm-hotel-name').textContent=hotel.name;
+    document.getElementById('bm-hotel-loc').textContent='📍 '+hotel.location;
+    document.getElementById('bm-price').textContent='RM '+parseFloat(hotel.price_per_night).toFixed(2);
+    document.getElementById('bm-checkin').value='';
+    document.getElementById('bm-checkout').value='';
+    document.getElementById('total-row').style.display='none';
+    document.getElementById('btn-confirm').disabled=false;
+    document.getElementById('btn-confirm').textContent='Confirm Booking';
+    const today=new Date().toISOString().split('T')[0];
+    document.getElementById('bm-checkin').min=today;
+    document.getElementById('bm-checkout').min=today;
+    document.getElementById('book-modal').classList.add('open');
+  }
+
+  function closeBookModal(){document.getElementById('book-modal').classList.remove('open');selectedHotel=null;}
+
+  document.getElementById('book-modal').addEventListener('click',function(e){if(e.target===this)closeBookModal();});
+  document.getElementById('bm-checkin').addEventListener('change',calcTotal);
+  document.getElementById('bm-checkout').addEventListener('change',calcTotal);
+
+  function calcTotal() {
+    const cin=document.getElementById('bm-checkin').value;
+    const cout=document.getElementById('bm-checkout').value;
+    if(!cin||!cout||!selectedHotel)return;
+    const nights=Math.ceil((new Date(cout)-new Date(cin))/86400000);
+    if(nights<=0)return;
+    const total=nights*parseFloat(selectedHotel.price_per_night);
+    document.getElementById('bm-total').textContent=`RM ${total.toFixed(2)} (${nights} night${nights>1?'s':''})`;
+    document.getElementById('total-row').style.display='flex';
+  }
+
+  async function submitBooking() {
+    const checkIn=document.getElementById('bm-checkin').value;
+    const checkOut=document.getElementById('bm-checkout').value;
+    const errEl=document.getElementById('book-err');
+    errEl.style.display='none';
+    if(!checkIn){errEl.textContent='Please select a check-in date.';errEl.style.display='block';return;}
+    if(!checkOut){errEl.textContent='Please select a check-out date.';errEl.style.display='block';return;}
+    if(new Date(checkOut)<=new Date(checkIn)){errEl.textContent='Check-out must be after check-in.';errEl.style.display='block';return;}
+    const btn=document.getElementById('btn-confirm');
+    btn.disabled=true;btn.textContent='Processing...';
+    const res=await api('POST','/bookings',{user_id:parseInt(currentUser.id),hotel_id:selectedHotel.id,check_in:checkIn,check_out:checkOut});
+    if(res.success){
+      document.getElementById('bm-ref').textContent='#'+res.booking_id;
+      document.getElementById('book-form').style.display='none';
+      document.getElementById('book-success').style.display='block';
+    } else {
+      errEl.textContent=res.message||'Booking failed.';errEl.style.display='block';
+      btn.disabled=false;btn.textContent='Confirm Booking';
+    }
+  }
+
+  function afterBooking(){closeBookModal();showTab('mybookings');}
+
+  // ── My Bookings ──────────────────────────────────────────
+  async function loadMyBookings() {
+    const [bData, pData] = await Promise.all([api('GET','/bookings'), api('GET','/payments')]);
+    const mine    = (bData.data||[]).filter(b=>String(b.user_id)===String(currentUser.id));
+    const payments= pData.data||[];
+    const container=document.getElementById('bookings-list');
+
+    if(!mine.length){
+      container.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>No bookings yet. Browse hotels to make your first booking!</p></div>';return;
+    }
+
+    const statusBadge = s => {
+      const map={confirmed:'badge-green',pending:'badge-amber',cancelled:'badge-red'};
+      return `<span class="badge ${map[s]||'badge-amber'}">${s}</span>`;
+    };
+
+    container.innerHTML=mine.map(b=>{
+      // Check if booking has a paid payment
+      const paid = payments.find(p=>String(p.booking_id)===String(b.id)&&p.status==='paid');
+      const unpaid = payments.find(p=>String(p.booking_id)===String(b.id)&&p.status==='unpaid');
+      const nights = Math.ceil((new Date(b.check_out)-new Date(b.check_in))/86400000);
+      const amt = nights * parseFloat(b.price_per_night||0);
+
+      let payBtn = '';
+      if(!paid && b.status !== 'cancelled') {
+        payBtn = `<button class="btn btn-success" onclick="openPayModal(${JSON.stringify(b).replace(/"/g,'&quot;')},${amt.toFixed(2)})">💳 Pay Now</button>`;
+      } else if(paid) {
+        payBtn = `<span class="badge badge-paid">✓ Paid</span>`;
+      }
+
+      return `<div class="booking-item">
+        <div class="booking-info">
+          <div class="b-hotel">🏨 ${b.hotel_name||'Hotel #'+b.hotel_id}</div>
+          <div class="b-dates">📅 ${fmtDate(b.check_in)} → ${fmtDate(b.check_out)} · ${nights} night${nights>1?'s':''}</div>
+          <div class="b-ref">Booking Ref: <strong>#${b.id}</strong>${amt>0?` · RM ${amt.toFixed(2)} total`:''}</div>
+        </div>
+        <div class="booking-right">${statusBadge(b.status)} ${payBtn}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Payment Modal ────────────────────────────────────────
+  function openPayModal(booking, amount) {
+    payingBooking = booking;
+    selectedPayMethod = null;
+    document.getElementById('pay-form').style.display='block';
+    document.getElementById('pay-success').style.display='none';
+    document.getElementById('pay-err').style.display='none';
+    document.getElementById('pay-booking-info').textContent=`${booking.hotel_name||'Hotel'} · ${fmtDate(booking.check_in)} → ${fmtDate(booking.check_out)}`;
+    document.getElementById('pay-amount-display').textContent=`RM ${parseFloat(amount).toFixed(2)}`;
+    // Reset method buttons
+    document.querySelectorAll('.pay-method-btn').forEach(b=>b.classList.remove('selected'));
+    document.getElementById('pay-btn').textContent='Pay Now';
+    document.getElementById('pay-btn').disabled=false;
+    // Store amount for later
+    document.getElementById('pay-btn').dataset.amount = amount;
+    document.getElementById('pay-modal').classList.add('open');
+  }
+
+  function closePayModal(){document.getElementById('pay-modal').classList.remove('open');payingBooking=null;selectedPayMethod=null;}
+  document.getElementById('pay-modal').addEventListener('click',function(e){if(e.target===this)closePayModal();});
+
+  function selectPayMethod(method, btn) {
+    selectedPayMethod = method;
+    document.querySelectorAll('.pay-method-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function submitPayment() {
+    const errEl = document.getElementById('pay-err');
+    errEl.style.display = 'none';
+
+    if(!selectedPayMethod){
+      errEl.textContent='Please select a payment method.';errEl.style.display='block';return;
+    }
+
+    const btn    = document.getElementById('pay-btn');
+    const amount = parseFloat(btn.dataset.amount);
+    btn.disabled = true; btn.textContent = 'Processing...';
+
+    // Step 1: Create payment record
+    const createRes = await api('POST','/payments',{
+      booking_id: parseInt(payingBooking.id),
+      amount:     amount,
+      method:     selectedPayMethod
+    });
+
+    if(!createRes.success){
+      errEl.textContent=createRes.message||'Failed to create payment.';errEl.style.display='block';
+      btn.disabled=false;btn.textContent='Pay Now';return;
+    }
+
+    // Step 2: Mark payment as paid (this auto-confirms the booking via PaymentController)
+    const payRes = await api('PUT',`/payments/${createRes.id}`,{status:'paid'});
+
+    if(payRes.success){
+      document.getElementById('pay-ref-id').textContent='#'+createRes.id;
+      document.getElementById('pay-form').style.display='none';
+      document.getElementById('pay-success').style.display='block';
+    } else {
+      errEl.textContent=payRes.message||'Payment update failed.';errEl.style.display='block';
+      btn.disabled=false;btn.textContent='Pay Now';
+    }
+  }
+
+  function afterPayment(){closePayModal();showTab('mybookings');}
+
+  // ── My Payments ──────────────────────────────────────────
+  async function loadMyPayments() {
+    const [bData,pData]=await Promise.all([api('GET','/bookings'),api('GET','/payments')]);
+    const myIds=(bData.data||[]).filter(b=>String(b.user_id)===String(currentUser.id)).map(b=>String(b.id));
+    const mine =(pData.data||[]).filter(p=>myIds.includes(String(p.booking_id)));
+    const container=document.getElementById('payments-list');
+    if(!mine.length){container.innerHTML='<div class="empty-state"><div class="icon">💳</div><p>No payment records found.</p></div>';return;}
+    container.innerHTML=mine.map(p=>`
+      <div class="payment-item">
+        <div>
+          <div style="font-weight:700;font-size:.95rem">Payment #${p.id} — Booking #${p.booking_id}</div>
+          <div style="color:var(--muted);font-size:.82rem;margin-top:4px">${p.method} · ${p.paid_at?'Paid on '+fmtDate(p.paid_at):'Pending payment'}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:1.1rem;font-weight:800;color:var(--accent)">RM ${parseFloat(p.amount).toFixed(2)}</div>
+          <span class="badge badge-${p.status==='paid'?'paid':'unpaid'}">${p.status}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // Init
+  window.onload=()=>{
+    const id=localStorage.getItem('cust_id');
+    if(id) launchApp(); else showAuth('register');
+  };
+</script>
+</body>
+</html>

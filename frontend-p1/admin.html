@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HotelAPI — Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#0d0f14;--surface:#141720;--card:#1a1e2a;--border:#252a38;
+      --gold:#c9a84c;--gold-lt:#e8c97a;--text:#e8eaf0;--muted:#7a8199;
+      --green:#4caf82;--red:#e05c5c;--blue:#5c8de0;--amber:#e09e5c;
+      --radius:10px;--font-h:'DM Serif Display',serif;--font-b:'DM Sans',sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;display:flex;}
+    .sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0;position:fixed;top:0;left:0;bottom:0;}
+    .sidebar-logo{font-family:var(--font-h);font-size:1.2rem;color:var(--gold);padding:0 20px 24px;border-bottom:1px solid var(--border);letter-spacing:.5px;}
+    .sidebar-logo span{color:var(--muted);font-size:.72rem;display:block;font-family:var(--font-b);font-weight:300;margin-top:4px;line-height:1.4;}
+    .nav{margin-top:20px;display:flex;flex-direction:column;gap:4px;padding:0 12px;}
+    .nav-item{padding:10px 14px;border-radius:var(--radius);cursor:pointer;color:var(--muted);font-size:.9rem;font-weight:500;display:flex;align-items:center;gap:10px;transition:all .2s;border:none;background:none;text-align:left;width:100%;}
+    .nav-item:hover,.nav-item.active{background:rgba(201,168,76,.1);color:var(--gold-lt);}
+    .nav-item .icon{font-size:1rem;}
+    .main{margin-left:220px;flex:1;padding:32px;max-width:calc(100vw - 220px);}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+    .page-title{font-family:var(--font-h);font-size:1.8rem;color:var(--gold-lt);}
+    .page-subtitle{color:var(--muted);font-size:.85rem;margin-top:3px;}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+    .stat-label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.8px;}
+    .stat-value{font-family:var(--font-h);font-size:2rem;color:var(--text);margin-top:6px;}
+    .stat-accent{width:36px;height:3px;border-radius:2px;margin-top:10px;}
+    .section{display:none;}.section.active{display:block;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;}
+    .card-title{font-family:var(--font-h);font-size:1.1rem;color:var(--gold-lt);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .form-group{display:flex;flex-direction:column;gap:6px;}
+    .form-group.span2{grid-column:span 2;}
+    label{font-size:.8rem;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.6px;}
+    input,select,textarea{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:10px 13px;font-family:var(--font-b);font-size:.9rem;outline:none;transition:border .2s;width:100%;}
+    input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+    textarea{resize:vertical;min-height:80px;}
+    .btn{padding:9px 20px;border-radius:6px;border:none;font-family:var(--font-b);font-size:.88rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s;}
+    .btn:active{transform:scale(.97);}
+    .btn-gold{background:var(--gold);color:#0d0f14;}.btn-gold:hover{opacity:.88;}
+    .btn-red{background:var(--red);color:#fff;}.btn-red:hover{opacity:.85;}
+    .btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover{opacity:.85;}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+    .btn-sm{padding:5px 12px;font-size:.8rem;}
+    .btn-row{display:flex;gap:10px;margin-top:16px;}
+    .tbl-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:var(--surface);color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.7px;padding:11px 14px;text-align:left;border-bottom:1px solid var(--border);}
+    td{padding:12px 14px;font-size:.88rem;border-bottom:1px solid var(--border);color:var(--text);}
+    tr:hover td{background:rgba(255,255,255,.02);}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600;}
+    .badge-green{background:rgba(76,175,130,.15);color:var(--green);}
+    .badge-amber{background:rgba(224,158,92,.15);color:var(--amber);}
+    .badge-red{background:rgba(224,92,92,.15);color:var(--red);}
+    .badge-blue{background:rgba(92,141,224,.15);color:var(--blue);}
+    #toast{position:fixed;bottom:28px;right:28px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:13px 20px;color:var(--text);font-size:.88rem;transform:translateY(80px);opacity:0;transition:all .3s;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+    #toast.show{transform:translateY(0);opacity:1;}
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+    .modal-title{font-family:var(--font-h);color:var(--gold-lt);font-size:1.2rem;margin-bottom:20px;}
+    .api-box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;font-family:'Courier New',monospace;font-size:.78rem;color:var(--green);line-height:1.6;max-height:200px;overflow-y:auto;margin-top:12px;white-space:pre-wrap;}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    🏨 HotelAPI
+    <span>Admin Dashboard<br>Mohamad Syaher Izham<br>AM2412017976</span>
+  </div>
+  <nav class="nav">
+    <button class="nav-item active" onclick="showSection('overview')" id="nav-overview"><span class="icon">📊</span> Overview</button>
+    <button class="nav-item" onclick="showSection('hotels')" id="nav-hotels"><span class="icon">🏨</span> Hotels</button>
+    <button class="nav-item" onclick="showSection('bookings')" id="nav-bookings"><span class="icon">📅</span> Bookings</button>
+    <button class="nav-item" onclick="showSection('payments')" id="nav-payments"><span class="icon">💳</span> Payments</button>
+    <button class="nav-item" onclick="showSection('customers')" id="nav-customers"><span class="icon">👤</span> Customers</button>
+    <button class="nav-item" onclick="showSection('api-test')" id="nav-api-test"><span class="icon">🔌</span> API Tester</button>
+  </nav>
+</aside>
+
+<main class="main">
+
+  <!-- OVERVIEW -->
+  <div class="section active" id="section-overview">
+    <div class="page-header">
+      <div><div class="page-title">Dashboard Overview</div><div class="page-subtitle">Hotel & Travel Reservation System</div></div>
+      <button class="btn btn-gold" onclick="loadStats()">↻ Refresh</button>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-label">Total Hotels</div><div class="stat-value" id="stat-hotels">—</div><div class="stat-accent" style="background:var(--gold)"></div></div>
+      <div class="stat-card"><div class="stat-label">Total Bookings</div><div class="stat-value" id="stat-bookings">—</div><div class="stat-accent" style="background:var(--blue)"></div></div>
+      <div class="stat-card"><div class="stat-label">Confirmed</div><div class="stat-value" id="stat-confirmed">—</div><div class="stat-accent" style="background:var(--green)"></div></div>
+      <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="stat-pending">—</div><div class="stat-accent" style="background:var(--amber)"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recent Bookings</div>
+      <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Guest</th><th>Hotel</th><th>Check In</th><th>Check Out</th><th>Status</th></tr></thead>
+      <tbody id="recent-bookings-body"><tr><td colspan="6" style="color:var(--muted);text-align:center">Loading...</td></tr></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recent Payments</div>
+      <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Booking</th><th>Amount</th><th>Method</th><th>Status</th><th>Paid At</th></tr></thead>
+      <tbody id="recent-payments-body"><tr><td colspan="6" style="color:var(--muted);text-align:center">Loading...</td></tr></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- HOTELS -->
+  <div class="section" id="section-hotels">
+    <div class="page-header">
+      <div><div class="page-title">Manage Hotels</div><div class="page-subtitle">Add, edit, or remove hotel listings</div></div>
+      <button class="btn btn-gold" onclick="openHotelModal()">+ Add Hotel</button>
+    </div>
+    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Location</th><th>Price/Night (RM)</th><th>Actions</th></tr></thead>
+    <tbody id="hotels-body"><tr><td colspan="5" style="color:var(--muted);text-align:center">Loading...</td></tr></tbody></table></div></div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div class="section" id="section-bookings">
+    <div class="page-header">
+      <div><div class="page-title">Manage Bookings</div><div class="page-subtitle">View and update all reservations</div></div>
+      <button class="btn btn-gold" onclick="openBookingModal()">+ New Booking</button>
+    </div>
+    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Guest</th><th>Hotel</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="bookings-body"><tr><td colspan="7" style="color:var(--muted);text-align:center">Loading...</td></tr></tbody></table></div></div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div class="section" id="section-payments">
+    <div class="page-header">
+      <div><div class="page-title">Payment Records</div><div class="page-subtitle">All payment transactions</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="loadPayments()">↻ Refresh</button>
+    </div>
+    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Booking #</th><th>Guest</th><th>Hotel</th><th>Amount (RM)</th><th>Method</th><th>Status</th><th>Paid At</th></tr></thead>
+    <tbody id="payments-body"><tr><td colspan="8" style="color:var(--muted);text-align:center">Loading...</td></tr></tbody></table></div></div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div class="section" id="section-customers">
+    <div class="page-header">
+      <div><div class="page-title">Manage Customers</div><div class="page-subtitle">Add and manage guest accounts</div></div>
+      <button class="btn btn-gold" onclick="openUserModal()">+ Add Customer</button>
+    </div>
+    <div class="card"><div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Registered</th><th>Actions</th></tr></thead>
+    <tbody id="users-body"><tr><td colspan="5" style="color:var(--muted);text-align:center">Loading...</td></tr></tbody></table></div></div>
+  </div>
+
+  <!-- API TESTER -->
+  <div class="section" id="section-api-test">
+    <div class="page-header"><div><div class="page-title">API Tester</div><div class="page-subtitle">Test endpoints directly from the dashboard</div></div></div>
+    <div class="card">
+      <div class="card-title">Send API Request</div>
+      <div class="form-grid">
+        <div class="form-group"><label>HTTP Method</label><select id="api-method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select></div>
+        <div class="form-group"><label>Endpoint</label><input id="api-endpoint" value="/hotel-api/api/hotels"/></div>
+        <div class="form-group span2"><label>Request Body (JSON) — for POST / PUT only</label><textarea id="api-body" rows="4" placeholder='{"name":"Hilton KL","location":"Kuala Lumpur","price_per_night":500}'></textarea></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="sendApiRequest()">▶ Send Request</button>
+        <button class="btn btn-ghost" onclick="clearApiTest()">Clear</button>
+      </div>
+      <div id="api-response" class="api-box" style="display:none"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Endpoint Reference</div>
+      <table><thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead><tbody>
+        <tr><td><span class="badge badge-green">GET</span></td><td>/api/hotels</td><td>Get all hotels</td></tr>
+        <tr><td><span class="badge badge-green">GET</span></td><td>/api/hotels/{id}</td><td>Get single hotel</td></tr>
+        <tr><td><span class="badge badge-amber">POST</span></td><td>/api/hotels</td><td>Create hotel</td></tr>
+        <tr><td><span class="badge badge-blue">PUT</span></td><td>/api/hotels/{id}</td><td>Update hotel</td></tr>
+        <tr><td><span class="badge badge-red">DELETE</span></td><td>/api/hotels/{id}</td><td>Delete hotel</td></tr>
+        <tr><td><span class="badge badge-green">GET</span></td><td>/api/bookings</td><td>Get all bookings</td></tr>
+        <tr><td><span class="badge badge-amber">POST</span></td><td>/api/bookings</td><td>Create booking</td></tr>
+        <tr><td><span class="badge badge-blue">PUT</span></td><td>/api/bookings/{id}</td><td>Update booking status</td></tr>
+        <tr><td><span class="badge badge-red">DELETE</span></td><td>/api/bookings/{id}</td><td>Delete booking</td></tr>
+        <tr><td><span class="badge badge-green">GET</span></td><td>/api/payments</td><td>Get all payments</td></tr>
+        <tr><td><span class="badge badge-amber">POST</span></td><td>/api/payments</td><td>Create payment</td></tr>
+        <tr><td><span class="badge badge-blue">PUT</span></td><td>/api/payments/{id}</td><td>Mark payment as paid</td></tr>
+        <tr><td><span class="badge badge-green">GET</span></td><td>/api/users</td><td>Get all users</td></tr>
+        <tr><td><span class="badge badge-amber">POST</span></td><td>/api/users</td><td>Create user</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</main>
+
+<!-- Hotel Modal -->
+<div class="modal-overlay" id="hotel-modal">
+  <div class="modal">
+    <div class="modal-title" id="hotel-modal-title">Add New Hotel</div>
+    <input type="hidden" id="hotel-id"/>
+    <div class="form-grid">
+      <div class="form-group"><label>Hotel Name</label><input id="h-name" placeholder="e.g. Grand Hyatt KL"/></div>
+      <div class="form-group"><label>Location</label><input id="h-location" placeholder="e.g. Kuala Lumpur"/></div>
+      <div class="form-group"><label>Price Per Night (RM)</label><input id="h-price" type="number" placeholder="e.g. 450"/></div>
+      <div class="form-group"><label>Image URL (optional)</label><input id="h-image" placeholder="https://..."/></div>
+      <div class="form-group span2"><label>Description</label><textarea id="h-desc" placeholder="Short description..."></textarea></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="saveHotel()">Save Hotel</button><button class="btn btn-ghost" onclick="closeModal('hotel-modal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal-overlay" id="booking-modal">
+  <div class="modal">
+    <div class="modal-title" id="booking-modal-title">New Booking</div>
+    <input type="hidden" id="booking-id"/>
+    <div class="form-grid">
+      <div class="form-group"><label>Customer</label><select id="b-user"><option value="">— Select Customer —</option></select></div>
+      <div class="form-group"><label>Hotel</label><select id="b-hotel"><option value="">— Select Hotel —</option></select></div>
+      <div class="form-group"><label>Check In</label><input id="b-checkin" type="date"/></div>
+      <div class="form-group"><label>Check Out</label><input id="b-checkout" type="date"/></div>
+      <div class="form-group span2" id="b-status-group" style="display:none"><label>Status</label>
+        <select id="b-status"><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option></select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="saveBooking()">Save Booking</button><button class="btn btn-ghost" onclick="closeModal('booking-modal')">Cancel</button></div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-title" id="user-modal-title">Add New Customer</div>
+    <input type="hidden" id="user-id"/>
+    <div class="form-grid">
+      <div class="form-group"><label>Full Name</label><input id="u-name" placeholder="e.g. Ahmad Syaher"/></div>
+      <div class="form-group"><label>Email Address</label><input id="u-email" type="email" placeholder="e.g. syaher@email.com"/></div>
+      <div class="form-group span2" id="u-pass-group"><label>Password</label><input id="u-password" type="password" placeholder="Minimum 6 characters"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-gold" onclick="saveUser()">Save Customer</button><button class="btn btn-ghost" onclick="closeModal('user-modal')">Cancel</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const BASE = '/hotel-api/api';
+  const API_KEY = 'hotel-secret-key-2026';
+
+  // ── Date format helper: YYYY-MM-DD → DD/MM/YYYY ──────────
+  function fmtDate(d) {
+    if (!d) return '—';
+    const p = d.split('T')[0].split('-');
+    return `${p[2]}/${p[1]}/${p[0]}`;
+  }
+
+  function fmtDateTime(d) {
+    if (!d) return '—';
+    const dt = d.split('T');
+    const p  = dt[0].split('-');
+    return `${p[2]}/${p[1]}/${p[0]}${dt[1] ? ' ' + dt[1].substring(0,5) : ''}`;
+  }
+
+  async function api(method, endpoint, body = null) {
+    const opts = { method, headers: { 'Content-Type':'application/json','X-API-KEY':API_KEY } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(BASE + endpoint, opts);
+    return res.json();
+  }
+
+  function toast(msg, color = 'var(--green)') {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.style.borderColor = color;
+    el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function statusBadge(s) {
+    const map = { confirmed:'badge-green', pending:'badge-amber', cancelled:'badge-red' };
+    return `<span class="badge ${map[s]||'badge-amber'}">${s}</span>`;
+  }
+
+  function payStatusBadge(s) {
+    return s === 'paid'
+      ? `<span class="badge badge-green">paid</span>`
+      : `<span class="badge badge-amber">unpaid</span>`;
+  }
+
+  function showSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+    if (name === 'overview')  { loadStats(); loadRecentBookings(); loadRecentPayments(); }
+    if (name === 'hotels')    loadHotels();
+    if (name === 'bookings')  loadBookings();
+    if (name === 'payments')  loadPayments();
+    if (name === 'customers') loadUsers();
+  }
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); }));
+
+  // ── OVERVIEW ──────────────────────────────────────────────
+  async function loadStats() {
+    const [hotels, bookings] = await Promise.all([api('GET','/hotels'), api('GET','/bookings')]);
+    document.getElementById('stat-hotels').textContent   = hotels.count  || 0;
+    document.getElementById('stat-bookings').textContent = bookings.count || 0;
+    const confirmed = (bookings.data||[]).filter(b=>b.status==='confirmed').length;
+    const pending   = (bookings.data||[]).filter(b=>b.status==='pending').length;
+    document.getElementById('stat-confirmed').textContent = confirmed;
+    document.getElementById('stat-pending').textContent   = pending;
+  }
+
+  async function loadRecentBookings() {
+    const data = await api('GET','/bookings');
+    const rows = (data.data||[]).slice(0,6);
+    document.getElementById('recent-bookings-body').innerHTML = rows.map(b => `
+      <tr><td>#${b.id}</td><td>${b.user_name||'—'}</td><td>${b.hotel_name||'—'}</td>
+      <td>${fmtDate(b.check_in)}</td><td>${fmtDate(b.check_out)}</td><td>${statusBadge(b.status)}</td></tr>
+    `).join('') || `<tr><td colspan="6" style="color:var(--muted);text-align:center">No bookings</td></tr>`;
+  }
+
+  async function loadRecentPayments() {
+    const data = await api('GET','/payments');
+    const rows = (data.data||[]).slice(0,5);
+    document.getElementById('recent-payments-body').innerHTML = rows.map(p => `
+      <tr><td>#${p.id}</td><td>#${p.booking_id}</td><td>RM ${parseFloat(p.amount).toFixed(2)}</td>
+      <td>${p.method}</td><td>${payStatusBadge(p.status)}</td><td>${fmtDateTime(p.paid_at)}</td></tr>
+    `).join('') || `<tr><td colspan="6" style="color:var(--muted);text-align:center">No payments</td></tr>`;
+  }
+
+  // ── HOTELS ────────────────────────────────────────────────
+  async function loadHotels() {
+    const data  = await api('GET','/hotels');
+    const tbody = document.getElementById('hotels-body');
+    tbody.innerHTML = (data.data||[]).map(h => `
+      <tr><td>#${h.id}</td><td>${h.name}</td><td>${h.location}</td>
+      <td>RM ${parseFloat(h.price_per_night).toFixed(2)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick='openHotelModal(${JSON.stringify(h)})'>Edit</button>
+          <button class="btn btn-red btn-sm" onclick="deleteHotel(${h.id})" style="margin-left:6px">Delete</button></td></tr>
+    `).join('') || `<tr><td colspan="5" style="color:var(--muted);text-align:center">No hotels found</td></tr>`;
+  }
+
+  function openHotelModal(hotel = null) {
+    document.getElementById('hotel-modal-title').textContent = hotel ? 'Edit Hotel' : 'Add New Hotel';
+    document.getElementById('hotel-id').value    = hotel ? hotel.id : '';
+    document.getElementById('h-name').value      = hotel ? hotel.name : '';
+    document.getElementById('h-location').value  = hotel ? hotel.location : '';
+    document.getElementById('h-price').value     = hotel ? hotel.price_per_night : '';
+    document.getElementById('h-image').value     = hotel ? hotel.image_url : '';
+    document.getElementById('h-desc').value      = hotel ? hotel.description : '';
+    document.getElementById('hotel-modal').classList.add('open');
+  }
+
+  async function saveHotel() {
+    const id   = document.getElementById('hotel-id').value;
+    const body = { name:document.getElementById('h-name').value, location:document.getElementById('h-location').value, price_per_night:parseFloat(document.getElementById('h-price').value), description:document.getElementById('h-desc').value, image_url:document.getElementById('h-image').value };
+    if (!body.name||!body.location||!body.price_per_night){toast('Name, location and price required','var(--red)');return;}
+    const res = await api(id?'PUT':'POST', id?`/hotels/${id}`:'/hotels', body);
+    if (res.success){toast(id?'Hotel updated ✓':'Hotel created ✓');closeModal('hotel-modal');loadHotels();}
+    else toast(res.message||'Error','var(--red)');
+  }
+
+  async function deleteHotel(id) {
+    if (!confirm(`Delete hotel #${id}?`)) return;
+    const res = await api('DELETE',`/hotels/${id}`);
+    if (res.success){toast('Hotel deleted');loadHotels();}
+    else toast(res.message||'Error','var(--red)');
+  }
+
+  // ── BOOKINGS ──────────────────────────────────────────────
+  async function loadBookings() {
+    const data  = await api('GET','/bookings');
+    const tbody = document.getElementById('bookings-body');
+    tbody.innerHTML = (data.data||[]).map(b => `
+      <tr><td>#${b.id}</td><td>${b.user_name||b.user_id}</td><td>${b.hotel_name||b.hotel_id}</td>
+      <td>${fmtDate(b.check_in)}</td><td>${fmtDate(b.check_out)}</td><td>${statusBadge(b.status)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick='openBookingModal(${JSON.stringify(b)})'>Edit</button>
+          <button class="btn btn-red btn-sm" onclick="deleteBooking(${b.id})" style="margin-left:6px">Delete</button></td></tr>
+    `).join('') || `<tr><td colspan="7" style="color:var(--muted);text-align:center">No bookings</td></tr>`;
+  }
+
+  function openBookingModal(booking = null) {
+    document.getElementById('booking-modal-title').textContent = booking ? 'Edit Booking' : 'New Booking';
+    document.getElementById('booking-id').value  = booking ? booking.id : '';
+    document.getElementById('b-checkin').value   = booking ? booking.check_in : '';
+    document.getElementById('b-checkout').value  = booking ? booking.check_out : '';
+    document.getElementById('b-status-group').style.display = booking ? 'flex' : 'none';
+    if (booking) document.getElementById('b-status').value = booking.status;
+    api('GET','/users').then(d => {
+      document.getElementById('b-user').innerHTML = '<option value="">— Select Customer —</option>' +
+        (d.data||[]).map(u=>`<option value="${u.id}" ${booking&&booking.user_id==u.id?'selected':''}>#${u.id} — ${u.name}</option>`).join('');
+    });
+    api('GET','/hotels').then(d => {
+      document.getElementById('b-hotel').innerHTML = '<option value="">— Select Hotel —</option>' +
+        (d.data||[]).map(h=>`<option value="${h.id}" ${booking&&booking.hotel_id==h.id?'selected':''}>${h.name} (RM${h.price_per_night}/night)</option>`).join('');
+    });
+    document.getElementById('booking-modal').classList.add('open');
+  }
+
+  async function saveBooking() {
+    const id   = document.getElementById('booking-id').value;
+    const body = { user_id:parseInt(document.getElementById('b-user').value), hotel_id:parseInt(document.getElementById('b-hotel').value), check_in:document.getElementById('b-checkin').value, check_out:document.getElementById('b-checkout').value };
+    if (id) body.status = document.getElementById('b-status').value;
+    if (!body.user_id||!body.hotel_id||!body.check_in||!body.check_out){toast('Please fill all fields','var(--red)');return;}
+    const res = await api(id?'PUT':'POST', id?`/bookings/${id}`:'/bookings', body);
+    if (res.success){toast(id?'Booking updated ✓':'Booking created ✓');closeModal('booking-modal');loadBookings();}
+    else toast(res.message||'Error','var(--red)');
+  }
+
+  async function deleteBooking(id) {
+    if (!confirm(`Delete booking #${id}?`)) return;
+    const res = await api('DELETE',`/bookings/${id}`);
+    if (res.success){toast('Booking deleted');loadBookings();}
+    else toast(res.message||'Error','var(--red)');
+  }
+
+  // ── PAYMENTS ──────────────────────────────────────────────
+  async function loadPayments() {
+    const [pData, bData] = await Promise.all([api('GET','/payments'), api('GET','/bookings')]);
+    const payments  = pData.data || [];
+    const bookings  = bData.data || [];
+    const tbody     = document.getElementById('payments-body');
+    tbody.innerHTML = payments.map(p => {
+      const b = bookings.find(x => x.id == p.booking_id);
+      return `<tr>
+        <td>#${p.id}</td><td>#${p.booking_id}</td>
+        <td>${b ? (b.user_name||'—') : '—'}</td>
+        <td>${b ? (b.hotel_name||'—') : '—'}</td>
+        <td><strong>RM ${parseFloat(p.amount).toFixed(2)}</strong></td>
+        <td>${p.method}</td>
+        <td>${payStatusBadge(p.status)}</td>
+        <td>${fmtDateTime(p.paid_at)}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="8" style="color:var(--muted);text-align:center">No payments</td></tr>`;
+  }
+
+  // ── CUSTOMERS ─────────────────────────────────────────────
+  async function loadUsers() {
+    const data  = await api('GET','/users');
+    const tbody = document.getElementById('users-body');
+    tbody.innerHTML = (data.data||[]).map(u => `
+      <tr><td>#${u.id}</td><td>${u.name}</td><td>${u.email}</td>
+      <td>${fmtDateTime(u.created_at)}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick='openUserModal(${JSON.stringify(u)})'>Edit</button>
+          <button class="btn btn-red btn-sm" onclick="deleteUser(${u.id})" style="margin-left:6px">Delete</button></td></tr>
+    `).join('') || `<tr><td colspan="5" style="color:var(--muted);text-align:center">No customers</td></tr>`;
+  }
+
+  function openUserModal(user = null) {
+    document.getElementById('user-modal-title').textContent = user ? 'Edit Customer' : 'Add New Customer';
+    document.getElementById('user-id').value    = user ? user.id : '';
+    document.getElementById('u-name').value     = user ? user.name : '';
+    document.getElementById('u-email').value    = user ? user.email : '';
+    document.getElementById('u-password').value = '';
+    document.getElementById('u-pass-group').style.display = user ? 'none' : 'flex';
+    document.getElementById('user-modal').classList.add('open');
+  }
+
+  async function saveUser() {
+    const id   = document.getElementById('user-id').value;
+    const name = document.getElementById('u-name').value.trim();
+    const email= document.getElementById('u-email').value.trim();
+    const pass = document.getElementById('u-password').value;
+    if (!name||!email){toast('Name and email required','var(--red)');return;}
+    if (!id&&pass.length<6){toast('Password min 6 chars','var(--red)');return;}
+    const body = id ? {name,email} : {name,email,password:pass};
+    const res  = await api(id?'PUT':'POST', id?`/users/${id}`:'/users', body);
+    if (res.success){toast(id?'Customer updated ✓':'Customer added ✓');closeModal('user-modal');loadUsers();}
+    else toast(res.message||'Error','var(--red)');
+  }
+
+  async function deleteUser(id) {
+    if (!confirm(`Delete customer #${id}?`)) return;
+    const res = await api('DELETE',`/users/${id}`);
+    if (res.success){toast('Customer deleted');loadUsers();}
+    else toast(res.message||'Error','var(--red)');
+  }
+
+  // ── API TESTER ────────────────────────────────────────────
+  async function sendApiRequest() {
+    const method   = document.getElementById('api-method').value;
+    const endpoint = document.getElementById('api-endpoint').value;
+    const bodyStr  = document.getElementById('api-body').value.trim();
+    let body = null;
+    if (bodyStr) { try { body = JSON.parse(bodyStr); } catch { toast('Invalid JSON','var(--red)'); return; } }
+    const box = document.getElementById('api-response');
+    box.style.display = 'block'; box.textContent = 'Sending...';
+    try {
+      const opts = { method, headers:{'Content-Type':'application/json','X-API-KEY':API_KEY} };
+      if (body) opts.body = JSON.stringify(body);
+      const res  = await fetch(endpoint, opts);
+      const data = await res.json();
+      box.textContent = JSON.stringify(data, null, 2);
+      box.style.color = data.success ? 'var(--green)' : 'var(--red)';
+    } catch(e) { box.textContent = 'Error: '+e.message; box.style.color='var(--red)'; }
+  }
+
+  function clearApiTest() {
+    document.getElementById('api-body').value = '';
+    const box = document.getElementById('api-response');
+    box.style.display='none'; box.textContent='';
+  }
+
+  // Init
+  loadStats(); loadRecentBookings(); loadRecentPayments();
+</script>
+</body>
+</html>
