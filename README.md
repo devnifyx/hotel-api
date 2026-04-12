@@ -78,7 +78,7 @@ hotel-api/
 ---
 
 ## 📝 Authors
-Developed by a team of student developers as part of an academic evaluation for the LuxeStay project. Each frontend iteration reflects the individual creative and technical contribution of a team member.
+Developed by a team of student developers as part of an academic evaluation for the Hotel & Travel Reservation System project. Each frontend iteration reflects the individual creative and technical contribution of a team member.
 
 ---
 *Hotel & Travel Reservation System — Redefining the hotel booking experience through modular design and relational integrity.*
