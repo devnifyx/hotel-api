@@ -101,7 +101,12 @@
                 </div>
 
                 <h4 class="fw-bold mb-4">Hotel Inventory</h4>
-                <div id="admin-hotel-list" class="d-flex flex-column gap-3"></div>
+                <div id="admin-hotel-list" class="d-flex flex-column gap-3 mb-4"></div>
+
+                <h4 class="fw-bold mb-4">Customer Feedback</h4>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0" id="admin-reviews-list"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -242,6 +247,36 @@
                     </div>
                 </div>
             `).join('');
+
+            // Fetch and display reviews
+            const reviewsPromises = hotels.data.map(h => apiCall(`/reviews/${h.id}`));
+            const reviewsResults = await Promise.all(reviewsPromises);
+            
+            let allReviews = [];
+            reviewsResults.forEach((res, index) => {
+                if (res.success && res.data.length > 0) {
+                    res.data.forEach(r => {
+                        allReviews.push({ ...r, hotel_name: hotels.data[index].name });
+                    });
+                }
+            });
+
+            // Sort reviews by date (newest first)
+            allReviews.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            document.getElementById('admin-reviews-list').innerHTML = allReviews.length > 0 ? allReviews.map(r => `
+                <div class="p-4 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div class="fw-bold small">${r.user_name}</div>
+                            <div class="text-primary small fw-medium" style="font-size: 0.7rem;"><i class="fas fa-hotel me-1"></i>${r.hotel_name}</div>
+                        </div>
+                        <div class="text-warning small">${'⭐'.repeat(r.rating)}</div>
+                    </div>
+                    <p class="text-muted mb-0" style="font-size: 0.8rem;">"${r.comment}"</p>
+                    <div class="text-end mt-2" style="font-size: 0.65rem; opacity: 0.6;">${formatDate(r.created_at)}</div>
+                </div>
+            `).join('') : '<p class="text-center text-muted p-4 small">No customer comments yet.</p>';
         }
     }
 

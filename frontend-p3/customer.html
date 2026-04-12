@@ -79,6 +79,29 @@
             margin-bottom: 20px;
         }
         .form-control { border-radius: 10px; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; }
+        
+        /* New Styles for Wishlist and Reviews */
+        .btn-wishlist {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: var(--transition);
+            z-index: 10;
+        }
+        .btn-wishlist.active { color: #e74c3c; }
+        .btn-wishlist:hover { transform: scale(1.1); }
+        
+        .review-card { border-bottom: 1px solid #f1f5f9; padding: 15px 0; }
+        .star-rating { color: #f1c40f; }
     </style>
 </head>
 <body>
@@ -210,12 +233,51 @@
     </div>
 </div>
 
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Guest Reviews</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-4" id="reviewHotelName"></p>
+                <div id="review-list" class="mb-4" style="max-height: 300px; overflow-y: auto;">
+                    <!-- Reviews will be loaded here -->
+                </div>
+                <hr>
+                <h6 class="fw-bold mb-3">Add a Review</h6>
+                <form id="add-review-form">
+                    <input type="hidden" id="review-hotel-id">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">RATING</label>
+                        <select id="review-rating" class="form-select border-0 bg-light" required>
+                            <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+                            <option value="4">⭐⭐⭐⭐ (Good)</option>
+                            <option value="3">⭐⭐⭐ (Average)</option>
+                            <option value="2">⭐⭐ (Poor)</option>
+                            <option value="1">⭐ (Terrible)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">YOUR COMMENT</label>
+                        <textarea id="review-comment" class="form-control border-0 bg-light" rows="3" placeholder="Share your experience..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 shadow-sm">Submit Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     const API_BASE = '/hotel-api/api';
     const API_KEY = CONFIG.INTERNAL_API_KEY;
     const WEATHER_API_KEY = CONFIG.WEATHER_API_KEY;
     const CURRENCY = 'RM';
     let currentUser = null;
+    let userWishlist = [];
 
 
     // Session check
@@ -247,8 +309,7 @@
 
     async function fetchWeather(city) {
         try {
-            // Clean up the location string to get a better search term for the weather API
-            // Usually taking the first part or common city names works best
+            if (!city) return "Weather N/A";
             const searchCity = city.split(' ')[0]; 
             const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(searchCity)}&appid=${WEATHER_API_KEY}&units=metric`);
             const data = await res.json();
@@ -268,54 +329,91 @@
     }
 
     async function loadUserData() {
-        const hotels = await apiCall('/hotels');
-        const bookings = await apiCall('/bookings');
-        
-        document.getElementById('hotel-count').innerText = `${hotels.data.length} Properties Found`;
-        
-        // Fetch weather for all hotels in parallel
-        const hotelCards = await Promise.all(hotels.data.map(async (h) => {
-            const weather = await fetchWeather(h.location);
-            return `
-                <div class="col-md-6">
-                    <div class="card h-100 border-0">
-                        <div class="hotel-img-wrapper">
-                            <div class="weather-badge"><i class="fas fa-cloud-sun me-1"></i> ${weather}</div>
-                            <img src="${h.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800'}" alt="${h.name}">
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="fw-bold mb-0">${h.name}</h5>
-                                <span class="text-primary fw-bold">${CURRENCY}${h.price_per_night}<small class="text-muted fw-normal" style="font-size:0.7rem">/nt</small></span>
+        console.log("Starting loadUserData...");
+        try {
+            // Fetch everything in parallel
+            const [hotels, bookings, wishlistRes] = await Promise.all([
+                apiCall('/hotels'),
+                apiCall('/bookings'),
+                apiCall(`/wishlists/${currentUser.id}`).catch(err => {
+                    console.warn("Wishlist fetch failed:", err);
+                    return { success: false, data: [] };
+                })
+            ]);
+            
+            console.log("API Responses:", { hotels, bookings, wishlistRes });
+
+            // Defensive data extraction
+            const hotelData = (hotels && hotels.success) ? hotels.data : [];
+            const bookingData = (bookings && bookings.success) ? bookings.data : [];
+            userWishlist = (wishlistRes && wishlistRes.success && Array.isArray(wishlistRes.data)) ? wishlistRes.data : [];
+            
+            if (!Array.isArray(hotelData)) {
+                console.error("hotelData is not an array:", hotelData);
+                throw new Error("Invalid hotel data received");
+            }
+
+            document.getElementById('hotel-count').innerText = `${hotelData.length} Properties Found`;
+            
+            if (hotelData.length === 0) {
+                document.getElementById('hotel-list').innerHTML = '<div class="col-12"><p class="text-center text-muted p-5 bg-white rounded-4">No hotels available at the moment.</p></div>';
+            } else {
+                // Fetch weather for all hotels in parallel
+                const hotelCards = await Promise.all(hotelData.map(async (h) => {
+                    const weather = await fetchWeather(h.location);
+                    const isWishlisted = Array.isArray(userWishlist) && userWishlist.includes(parseInt(h.id));
+                    
+                    return `
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0">
+                                <div class="hotel-img-wrapper">
+                                    <button class="btn-wishlist ${isWishlisted ? 'active' : ''}" onclick="toggleWishlist(${h.id})">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <div class="weather-badge"><i class="fas fa-cloud-sun me-1"></i> ${weather}</div>
+                                    <img src="${h.image_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800'}" alt="${h.name}">
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="fw-bold mb-0">${h.name}</h5>
+                                        <span class="text-primary fw-bold">${CURRENCY}${h.price_per_night}<small class="text-muted fw-normal" style="font-size:0.7rem">/nt</small></span>
+                                    </div>
+                                    <p class="text-muted small mb-3"><i class="fas fa-map-marker-alt me-1"></i> ${h.location}</p>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary flex-grow-1 btn-sm shadow-sm" onclick="bookHotel(${h.id}, '${h.name}')">Book Now</button>
+                                        <button class="btn btn-outline-primary btn-sm shadow-sm" onclick="showMap('${h.location}', '${h.name}')"><i class="fas fa-map"></i></button>
+                                    </div>
+                                    <button class="btn btn-link btn-sm text-muted mt-3 p-0 text-decoration-none small" onclick="openReviewModal(${h.id}, '${h.name}')">
+                                        <i class="far fa-comment-dots me-1"></i> View Guest Reviews
+                                    </button>
+                                </div>
                             </div>
-                            <p class="text-muted small mb-3"><i class="fas fa-map-marker-alt me-1"></i> ${h.location}</p>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary flex-grow-1 btn-sm shadow-sm" onclick="bookHotel(${h.id}, '${h.name}')">Book Now</button>
-                                <button class="btn btn-outline-primary btn-sm shadow-sm" onclick="showMap('${h.location}', '${h.name}')"><i class="fas fa-map"></i></button>
-                            </div>
                         </div>
+                    `;
+                }));
+                document.getElementById('hotel-list').innerHTML = hotelCards.join('');
+            }
+
+            const myBookings = bookingData.filter(b => b.user_id == currentUser.id);
+            
+            document.getElementById('my-bookings').innerHTML = myBookings.length ? myBookings.map(b => `
+                <div class="card p-3 mb-3 border-0">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0 fw-bold small">${b.hotel_name}</h6>
+                        <span class="badge-soft small ${b.status === 'confirmed' ? 'bg-soft-success' : (b.status === 'cancelled' ? 'bg-soft-danger' : 'bg-soft-warning')}">${b.status.toUpperCase()}</span>
+                    </div>
+                    <p class="small text-muted mb-3"><i class="far fa-calendar-alt me-1"></i> ${formatDate(b.check_in)} - ${formatDate(b.check_out)}</p>
+                    <div class="d-flex gap-2">
+                        ${b.status === 'pending' ? `<button class="btn btn-primary btn-sm flex-grow-1" style="font-size:0.7rem" onclick="openPaymentModal(${b.id}, '${b.hotel_name}', 350)">PAY NOW</button>` : ''}
+                        ${b.status !== 'cancelled' ? `<button class="btn btn-link btn-sm text-danger p-0 text-decoration-none fw-bold" style="font-size:0.7rem" onclick="cancelBooking(${b.id})">CANCEL</button>` : ''}
                     </div>
                 </div>
-            `;
-        }));
+            `).join('') : '<p class="text-muted text-center small p-4 bg-white rounded-4">No reservations yet.</p>';
 
-        document.getElementById('hotel-list').innerHTML = hotelCards.join('');
-
-        const myBookings = bookings.data.filter(b => b.user_id == currentUser.id);
-        
-        document.getElementById('my-bookings').innerHTML = myBookings.length ? myBookings.map(b => `
-            <div class="card p-3 mb-3 border-0">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="mb-0 fw-bold small">${b.hotel_name}</h6>
-                    <span class="badge-soft small ${b.status === 'confirmed' ? 'bg-soft-success' : (b.status === 'cancelled' ? 'bg-soft-danger' : 'bg-soft-warning')}">${b.status.toUpperCase()}</span>
-                </div>
-                <p class="small text-muted mb-3"><i class="far fa-calendar-alt me-1"></i> ${formatDate(b.check_in)} - ${formatDate(b.check_out)}</p>
-                <div class="d-flex gap-2">
-                    ${b.status === 'pending' ? `<button class="btn btn-primary btn-sm flex-grow-1" style="font-size:0.7rem" onclick="openPaymentModal(${b.id}, '${b.hotel_name}', 350)">PAY NOW</button>` : ''}
-                    ${b.status !== 'cancelled' ? `<button class="btn btn-link btn-sm text-danger p-0 text-decoration-none fw-bold" style="font-size:0.7rem" onclick="cancelBooking(${b.id})">CANCEL</button>` : ''}
-                </div>
-            </div>
-        `).join('') : '<p class="text-muted text-center small p-4 bg-white rounded-4">No reservations yet.</p>';
+        } catch (error) {
+            console.error("Critical Load Error:", error);
+            document.getElementById('hotel-list').innerHTML = `<div class="col-12"><div class="alert alert-danger rounded-4 p-4">Error: ${error.message}. Please check console for details.</div></div>`;
+        }
     }
 
     async function cancelBooking(id) {
@@ -326,6 +424,58 @@
             loadUserData();
         } else alert(res.message);
     }
+
+    // --- New Wishlist and Review Functions ---
+    async function toggleWishlist(hotelId) {
+        const res = await apiCall('/wishlists', 'POST', {
+            user_id: currentUser.id,
+            hotel_id: hotelId
+        });
+        if (res.success) loadUserData();
+    }
+
+    async function openReviewModal(hotelId, hotelName) {
+        document.getElementById('review-hotel-id').value = hotelId;
+        document.getElementById('reviewHotelName').innerText = `What guests say about ${hotelName}`;
+        
+        const res = await apiCall(`/reviews/${hotelId}`);
+        const list = document.getElementById('review-list');
+        
+        if (res.success && res.data.length > 0) {
+            list.innerHTML = res.data.map(r => `
+                <div class="review-card">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold small">${r.user_name}</span>
+                        <div class="star-rating small">${'⭐'.repeat(r.rating)}</div>
+                    </div>
+                    <p class="text-muted small mb-0">"${r.comment}"</p>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = '<p class="text-center text-muted small p-4">No reviews yet. Be the first!</p>';
+        }
+        
+        new bootstrap.Modal(document.getElementById('reviewModal')).show();
+    }
+
+    document.getElementById('add-review-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const hotelId = document.getElementById('review-hotel-id').value;
+        const res = await apiCall('/reviews', 'POST', {
+            user_id: currentUser.id,
+            hotel_id: parseInt(hotelId),
+            rating: parseInt(document.getElementById('review-rating').value),
+            comment: document.getElementById('review-comment').value
+        });
+        
+        if (res.success) {
+            alert('Review submitted!');
+            bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+            document.getElementById('add-review-form').reset();
+            loadUserData();
+        } else alert(res.message);
+    };
+    // ------------------------------------------
 
     function openPaymentModal(bookingId, hotelName, amount) {
         document.getElementById('pay-booking-id').value = bookingId;
