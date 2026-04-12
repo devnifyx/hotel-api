@@ -62,6 +62,32 @@
         .bg-soft-warning { background: #fef9c3; color: #854d0e; }
         .bg-soft-danger { background: #fee2e2; color: #991b1b; }
         .form-control { border-radius: 10px; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; }
+
+        /* Sub-navbar styles */
+        .sub-nav {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 72px; /* Height of the main navbar */
+            z-index: 999;
+            padding: 0.5rem 0;
+        }
+        .sub-nav .nav-link {
+            color: #64748b;
+            font-weight: 500;
+            font-size: 0.9rem;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        .sub-nav .nav-link:hover {
+            color: var(--accent);
+            background: rgba(52, 152, 219, 0.05);
+        }
+        .sub-nav .nav-link.active {
+            color: var(--accent);
+            background: rgba(52, 152, 219, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -76,37 +102,67 @@
     </div>
 </nav>
 
+<div class="sub-nav shadow-sm">
+    <div class="container">
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="showAdminTab('overview', this)"><i class="fas fa-chart-line me-2"></i>Overview</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showAdminTab('engagement', this)"><i class="fas fa-users me-2"></i>Guest Engagement</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showAdminTab('inventory', this)"><i class="fas fa-boxes me-2"></i>Hotel Inventory</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="showAdminTab('feedback', this)"><i class="fas fa-comments me-2"></i>Customer Feedback</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
 <script src="config.js"></script>
 
 <div class="container mt-5">
     <div id="admin-section">
-        <div class="row">
-            <div class="col-12 mb-5">
-                <div class="card p-5 border-0 text-white" style="background: linear-gradient(135deg, #1a2a3a 0%, #34495e 100%);">
-                    <h4 class="mb-4 fw-bold opacity-75">Analytics Overview</h4>
-                    <div class="row g-4" id="analytics-overview"></div>
+        <!-- Overview Tab -->
+        <div id="tab-overview" class="admin-tab-content">
+            <div class="row">
+                <div class="col-12 mb-5">
+                    <div class="card p-5 border-0 text-white" style="background: linear-gradient(135deg, #1a2a3a 0%, #34495e 100%);">
+                        <h4 class="mb-4 fw-bold opacity-75">Analytics Overview</h4>
+                        <div class="row g-4" id="analytics-overview"></div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0">Reservation Ledger</h4>
+                        <span class="badge bg-soft-success text-success px-3 py-2 rounded-pill small">Real-time Feed</span>
+                    </div>
+                    <div id="all-reservations"></div>
                 </div>
             </div>
-            <div class="col-lg-7">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="fw-bold mb-0">Reservation Ledger</h4>
-                    <span class="badge bg-soft-success text-success px-3 py-2 rounded-pill small">Real-time Feed</span>
-                </div>
-                <div id="all-reservations"></div>
+        </div>
+
+        <!-- Guest Engagement Tab -->
+        <div id="tab-engagement" class="admin-tab-content" style="display:none;">
+            <h4 class="fw-bold mb-4">Guest Engagement</h4>
+            <div class="card border-0 mb-4">
+                <div class="card-body p-0" id="user-activity"></div>
             </div>
-            <div class="col-lg-5">
-                <h4 class="fw-bold mb-4">Guest Engagement</h4>
-                <div class="card border-0 mb-4">
-                    <div class="card-body p-0" id="user-activity"></div>
-                </div>
+        </div>
 
-                <h4 class="fw-bold mb-4">Hotel Inventory</h4>
-                <div id="admin-hotel-list" class="d-flex flex-column gap-3 mb-4"></div>
+        <!-- Hotel Inventory Tab -->
+        <div id="tab-inventory" class="admin-tab-content" style="display:none;">
+            <h4 class="fw-bold mb-4">Hotel Inventory</h4>
+            <div id="admin-hotel-list" class="d-flex flex-column gap-3 mb-4"></div>
+        </div>
 
-                <h4 class="fw-bold mb-4">Customer Feedback</h4>
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-0" id="admin-reviews-list"></div>
-                </div>
+        <!-- Customer Feedback Tab -->
+        <div id="tab-feedback" class="admin-tab-content" style="display:none;">
+            <h4 class="fw-bold mb-4">Customer Feedback</h4>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0" id="admin-reviews-list"></div>
             </div>
         </div>
     </div>
@@ -192,6 +248,25 @@
     function logout() {
         localStorage.removeItem('hotelUser');
         window.location.href = 'login.html';
+    }
+
+    function showAdminTab(tabName, element) {
+        // Hide all tab contents
+        document.querySelectorAll('.admin-tab-content').forEach(tab => {
+            tab.style.display = 'none';
+        });
+        
+        // Remove active class from all nav links
+        document.querySelectorAll('.sub-nav .nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Show target tab and set link to active
+        document.getElementById('tab-' + tabName).style.display = 'block';
+        element.classList.add('active');
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function loadAdminData() {
