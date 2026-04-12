@@ -63,13 +63,38 @@ class PaymentController {
         $data   = json_decode(file_get_contents("php://input"), true);
         $status = $data['status'] ?? null;
         $paid_at = ($status === 'paid') ? date('Y-m-d H:i:s') : null;
-        $stmt = $this->conn->prepare("UPDATE payments SET status = COALESCE(?,status), paid_at = COALESCE(?,paid_at) WHERE id = ?");
-        $stmt->bind_param("ssi", $status, $paid_at, $id);
-        if ($stmt->execute()) {
-            echo json_encode(["success" => true, "message" => "Payment updated"]);
-        } else {
+
+        // Start transaction for atomic update
+        $this->conn->begin_transaction();
+
+        try {
+            // 1. Update the payment record
+            $stmt = $this->conn->prepare("UPDATE payments SET status = COALESCE(?,status), paid_at = COALESCE(?,paid_at) WHERE id = ?");
+            $stmt->bind_param("ssi", $status, $paid_at, $id);
+            $stmt->execute();
+
+            // 2. If status is 'paid', update the corresponding booking to 'confirmed'
+            if ($status === 'paid') {
+                // Get the booking_id for this payment
+                $stmt_get = $this->conn->prepare("SELECT booking_id FROM payments WHERE id = ?");
+                $stmt_get->bind_param("i", $id);
+                $stmt_get->execute();
+                $res_get = $stmt_get->get_result();
+                
+                if ($row = $res_get->fetch_assoc()) {
+                    $booking_id = $row['booking_id'];
+                    $stmt_book = $this->conn->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
+                    $stmt_book->bind_param("i", $booking_id);
+                    $stmt_book->execute();
+                }
+            }
+
+            $this->conn->commit();
+            echo json_encode(["success" => true, "message" => "Payment updated and booking confirmed"]);
+        } catch (Exception $e) {
+            $this->conn->rollback();
             http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Failed to update payment"]);
+            echo json_encode(["success" => false, "message" => "Failed to update payment: " . $e->getMessage()]);
         }
     }
 
