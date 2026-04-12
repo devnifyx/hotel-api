@@ -218,7 +218,7 @@
                     <input type="hidden" id="pay-booking-id">
                     <input type="hidden" id="pay-amount-value">
                     <div class="mb-4 text-start">
-                        <label class="form-label text-muted small fw-bold">SELECT METHOD (DEMO)</label>
+                        <label class="form-label text-muted small fw-bold">SELECT METHOD</label>
                         <select class="form-select border-0 bg-light" id="pay-method">
                             <option value="Credit Card">Credit Card</option>
                             <option value="Online Banking">Online Banking</option>
@@ -277,7 +277,7 @@
     const CURRENCY = 'RM';
     let currentUser = null;
     let userWishlist = [];
-
+    let allHotels = [];
 
     // Session check
     const storedUser = localStorage.getItem('hotelUser');
@@ -294,6 +294,14 @@
     const formatDate = (dateStr) => {
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
+    const calculateTotal = (checkIn, checkOut, pricePerNight) => {
+        const start = new Date(checkIn);
+        const end = new Date(checkOut);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays * pricePerNight;
     };
 
     async function apiCall(endpoint, method = 'GET', body = null) {
@@ -343,22 +351,22 @@
             console.log("API Responses:", { hotels, bookings, wishlistRes });
 
             // Defensive data extraction
-            const hotelData = (hotels && hotels.success) ? hotels.data : [];
+            allHotels = (hotels && hotels.success) ? hotels.data : [];
             const bookingData = (bookings && bookings.success) ? bookings.data : [];
             userWishlist = (wishlistRes && wishlistRes.success && Array.isArray(wishlistRes.data)) ? wishlistRes.data : [];
             
-            if (!Array.isArray(hotelData)) {
-                console.error("hotelData is not an array:", hotelData);
+            if (!Array.isArray(allHotels)) {
+                console.error("allHotels is not an array:", allHotels);
                 throw new Error("Invalid hotel data received");
             }
 
-            document.getElementById('hotel-count').innerText = `${hotelData.length} Properties Found`;
+            document.getElementById('hotel-count').innerText = `${allHotels.length} Properties Found`;
             
-            if (hotelData.length === 0) {
+            if (allHotels.length === 0) {
                 document.getElementById('hotel-list').innerHTML = '<div class="col-12"><p class="text-center text-muted p-5 bg-white rounded-4">No hotels available at the moment.</p></div>';
             } else {
                 // Fetch weather for all hotels in parallel
-                const hotelCards = await Promise.all(hotelData.map(async (h) => {
+                const hotelCards = await Promise.all(allHotels.map(async (h) => {
                     const weather = await fetchWeather(h.location);
                     const isWishlisted = Array.isArray(userWishlist) && userWishlist.includes(parseInt(h.id));
                     
@@ -395,7 +403,9 @@
 
             const myBookings = bookingData.filter(b => b.user_id == currentUser.id);
             
-            document.getElementById('my-bookings').innerHTML = myBookings.length ? myBookings.map(b => `
+            document.getElementById('my-bookings').innerHTML = myBookings.length ? myBookings.map(b => {
+                const total = calculateTotal(b.check_in, b.check_out, b.price_per_night);
+                return `
                 <div class="card p-3 mb-3 border-0">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h6 class="mb-0 fw-bold small">${b.hotel_name}</h6>
@@ -403,11 +413,11 @@
                     </div>
                     <p class="small text-muted mb-3"><i class="far fa-calendar-alt me-1"></i> ${formatDate(b.check_in)} - ${formatDate(b.check_out)}</p>
                     <div class="d-flex gap-2">
-                        ${b.status === 'pending' ? `<button class="btn btn-primary btn-sm flex-grow-1" style="font-size:0.7rem" onclick="openPaymentModal(${b.id}, '${b.hotel_name}', 350)">PAY NOW</button>` : ''}
+                        ${b.status === 'pending' ? `<button class="btn btn-primary btn-sm flex-grow-1" style="font-size:0.7rem" onclick="openPaymentModal(${b.id}, '${b.hotel_name}', ${total})">PAY NOW</button>` : ''}
                         ${b.status !== 'cancelled' ? `<button class="btn btn-link btn-sm text-danger p-0 text-decoration-none fw-bold" style="font-size:0.7rem" onclick="cancelBooking(${b.id})">CANCEL</button>` : ''}
                     </div>
                 </div>
-            `).join('') : '<p class="text-muted text-center small p-4 bg-white rounded-4">No reservations yet.</p>';
+            `}).join('') : '<p class="text-muted text-center small p-4 bg-white rounded-4">No reservations yet.</p>';
 
         } catch (error) {
             console.error("Critical Load Error:", error);
@@ -536,13 +546,18 @@
         });
         
         if (res.success) {
+            const hotel = allHotels.find(h => h.id == hotelId);
+            const checkIn = document.getElementById('modal-check-in').value;
+            const checkOut = document.getElementById('modal-check-out').value;
+            const total = calculateTotal(checkIn, checkOut, hotel ? hotel.price_per_night : 350);
+
             bootstrap.Modal.getInstance(document.getElementById('bookingModal')).hide();
             const successModal = new bootstrap.Modal(document.getElementById('successModal'));
             document.querySelector('#successModal h3').innerText = "Booking Successful!";
             document.querySelector('#successModal p').innerText = "Your reservation is saved. Please proceed to payment to confirm your luxury stay.";
             const btn = document.getElementById('success-modal-btn');
             btn.innerText = "Proceed to Payment";
-            btn.onclick = () => { openPaymentModal(res.booking_id, hotelName, 350); };
+            btn.onclick = () => { openPaymentModal(res.booking_id, hotelName, total); };
             successModal.show();
             loadUserData();
         } else alert(res.message);
