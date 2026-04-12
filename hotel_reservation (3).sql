@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 11, 2026 at 10:09 AM
+-- Generation Time: Apr 12, 2026 at 07:58 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,9 +43,9 @@ CREATE TABLE `bookings` (
 
 INSERT INTO `bookings` (`id`, `user_id`, `hotel_id`, `check_in`, `check_out`, `status`, `created_at`) VALUES
 (19, 8, 3, '2026-04-05', '2026-04-08', 'pending', '2026-04-05 07:07:13'),
-(27, 7, 1, '2026-04-05', '2026-04-08', 'confirmed', '2026-04-05 07:13:19'),
 (29, 13, 1, '2026-04-10', '2026-04-13', 'cancelled', '2026-04-10 13:29:08'),
-(30, 14, 3, '2026-04-10', '2026-04-13', 'confirmed', '2026-04-10 16:20:39');
+(30, 14, 3, '2026-04-10', '2026-04-13', 'confirmed', '2026-04-10 16:20:39'),
+(31, 13, 2, '2026-04-11', '2026-04-14', 'pending', '2026-04-11 15:49:15');
 
 -- --------------------------------------------------------
 
@@ -68,7 +68,7 @@ CREATE TABLE `hotels` (
 --
 
 INSERT INTO `hotels` (`id`, `name`, `location`, `price_per_night`, `description`, `image_url`, `created_at`) VALUES
-(1, 'Grand Hyatt KL', 'Grand Hyatt KL', 480.00, 'Updated description', '/hotel-api/api/uploads/1775364450_69d1e96204318.jpg', '2026-03-30 03:44:33'),
+(1, 'Grand Hyatt KL', 'Grand Hyatt KL', 550.00, 'Updated description', '/hotel-api/api/uploads/1775364450_69d1e96204318.jpg', '2026-03-30 03:44:33'),
 (2, 'Sunway Resort', 'Sunway ResortJaya', 280.00, 'Family resort with theme park access', '/hotel-api/api/uploads/1775364462_69d1e96e83889.jpg', '2026-03-30 03:44:33'),
 (3, 'Eastern & Oriental', 'Eastern & Oriental Hotel', 350.00, 'Heritage hotel on the Penang waterfront', '/hotel-api/api/uploads/1775364471_69d1e9777cd99.jpeg', '2026-03-30 03:44:33'),
 (4, 'Marriott Putrajaya', 'Marriott Putrajaya', 320.00, 'Modern hotel near government buildings', '/hotel-api/api/uploads/1775364480_69d1e9805b5cf.webp', '2026-03-30 03:44:33'),
@@ -96,7 +96,6 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`id`, `booking_id`, `amount`, `method`, `status`, `paid_at`) VALUES
-(8, 27, 350.00, 'Credit Card', 'paid', '2026-04-05 01:13:23'),
 (10, 29, 350.00, 'Credit Card', 'paid', '2026-04-10 07:29:28'),
 (11, 30, 350.00, 'Credit Card', 'paid', '2026-04-10 10:20:41');
 
@@ -112,6 +111,15 @@ CREATE TABLE `rate_limits` (
   `requests` int(11) DEFAULT 1,
   `window_start` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `rate_limits`
+--
+
+INSERT INTO `rate_limits` (`id`, `ip_address`, `requests`, `window_start`) VALUES
+(1, '::1', 55, '2026-04-11 13:52:37'),
+(2, '::1', 1, '2026-04-11 13:52:37'),
+(3, '::1', 1, '2026-04-11 13:52:37');
 
 -- --------------------------------------------------------
 
@@ -186,7 +194,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `hotels`
@@ -198,13 +206,13 @@ ALTER TABLE `hotels`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `rate_limits`
 --
 ALTER TABLE `rate_limits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `users`
